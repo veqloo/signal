@@ -59,3 +59,14 @@ https://<your-signal-domain>/?business=<business-slug>
 ## Deployment
 
 The `main` branch is connected to the Vercel production project. GitHub Actions runs a lightweight syntax and configuration check on each push and pull request.
+
+
+## Authentication URL configuration
+
+In Supabase Dashboard → Authentication → URL Configuration, set:
+
+- Site URL: `https://signal.veqlo.me`
+- Redirect URL: `https://signal.veqlo.me/**`
+- Optional preview URL: `https://signal-two-blue.vercel.app/**`
+
+The frontend passes its current origin as the email-confirmation redirect. Keep the production custom domain in the allow-list so email confirmation returns to Signal.
