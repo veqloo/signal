@@ -78,15 +78,15 @@ Deno.serve(async (req: Request) => {
     const ipHash = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, "0")).join("");
     const { error: limitInsertError } = await supabase.from("feedback_rate_limits").insert({ ip_hash: ipHash });
     if (!limitInsertError) {
+      // Keep the private rate-limit table bounded.
+      await supabase.from("feedback_rate_limits").delete()
+        .lt("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
       const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
       const { count } = await supabase.from("feedback_rate_limits")
         .select("id", { count: "exact", head: true })
         .eq("ip_hash", ipHash)
         .gte("created_at", since);
       if ((count ?? 0) > 20) return json({ error: "Too many submissions. Please try again later." }, 429, origin);
-      // Keep the private rate-limit table bounded.
-      await supabase.from("feedback_rate_limits").delete()
-        .lt("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
     }
   }
 
