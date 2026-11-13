@@ -70,3 +70,6 @@ In Supabase Dashboard → Authentication → URL Configuration, set:
 - Optional preview URL: `https://signal-two-blue.vercel.app/**`
 
 The frontend passes its current origin as the email-confirmation redirect. Keep the production custom domain in the allow-list so email confirmation returns to Signal.
+
+
+Security follow-up: Supabase's security advisor currently reports that leaked-password protection is disabled. Enable it under Supabase Dashboard → Authentication → Password Security. The connected Supabase tools do not expose this Auth setting.
