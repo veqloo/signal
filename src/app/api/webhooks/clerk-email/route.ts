@@ -4,7 +4,7 @@ import { Resend } from "resend";
 
 export const dynamic = "force-dynamic";
 
-// In-memory idempotency cache for deduplication (retained across warm serverless invocations)
+// Best-effort warm-instance deduplication only; durable idempotency requires database-backed event records.
 const processedEvents = new Set<string>();
 
 export async function POST(req: Request) {
@@ -16,43 +16,39 @@ export async function POST(req: Request) {
 
     const webhookSecret = process.env.CLERK_WEBHOOK_SIGNING_SECRET;
 
-    let evt: any;
-
-    if (webhookSecret) {
-      if (!svixId || !svixTimestamp || !svixSignature) {
-        return NextResponse.json(
-          { error: "Missing required svix headers" },
-          { status: 400 }
-        );
-      }
-
-      const wh = new Webhook(webhookSecret);
-      try {
-        evt = wh.verify(rawPayload, {
-          "svix-id": svixId,
-          "svix-timestamp": svixTimestamp,
-          "svix-signature": svixSignature,
-        });
-      } catch (err: any) {
-        console.error("[Clerk Webhook] Signature verification failed:", err.message);
-        return NextResponse.json(
-          { error: "Webhook signature verification failed" },
-          { status: 400 }
-        );
-      }
-    } else {
-      // In development / initial setup before webhook secret is configured
-      console.warn(
-        "[Clerk Webhook] CLERK_WEBHOOK_SIGNING_SECRET is not set. Processing unverified payload."
+    // Fail closed: never process Clerk events without a configured signing secret.
+    if (!webhookSecret) {
+      console.error("[Clerk Webhook] Signing secret is not configured.");
+      return NextResponse.json(
+        { error: "Webhook signing secret is not configured" },
+        { status: 503 }
       );
-      try {
-        evt = JSON.parse(rawPayload);
-      } catch {
-        return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
-      }
     }
 
-    const eventId = svixId || evt?.data?.id || `evt_${Date.now()}`;
+    if (!svixId || !svixTimestamp || !svixSignature) {
+      return NextResponse.json(
+        { error: "Missing required Svix headers" },
+        { status: 400 }
+      );
+    }
+
+    let evt: any;
+    const wh = new Webhook(webhookSecret);
+    try {
+      evt = wh.verify(rawPayload, {
+        "svix-id": svixId,
+        "svix-timestamp": svixTimestamp,
+        "svix-signature": svixSignature,
+      });
+    } catch (err: any) {
+      console.error("[Clerk Webhook] Signature verification failed.");
+      return NextResponse.json(
+        { error: "Webhook signature verification failed" },
+        { status: 400 }
+      );
+    }
+
+    const eventId = svixId;
     const eventType = evt?.type;
 
     // Idempotency check: prevent duplicate deliveries on retried webhooks
@@ -124,7 +120,7 @@ export async function POST(req: Request) {
       const fullName = `${data.first_name || ""} ${data.last_name || ""}`.trim();
       const avatarUrl = data.image_url || data.profile_image_url || "";
 
-      console.log(`[Clerk User Webhook] User sync event: ${clerkUserId} (${primaryEmail})`);
+      console.log(`[Clerk User Webhook] User sync event received: ${clerkUserId}`);
 
       processedEvents.add(eventId);
       return NextResponse.json({ success: true, userSynced: clerkUserId });
