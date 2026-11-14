@@ -1,11 +1,15 @@
 "use client";
 
+import { useAuth } from "@clerk/nextjs";
+import Link from "next/link";
 import { useWorkspace } from "@/lib/workspace-context";
 import { Header } from "@/components/dashboard/Header";
 import { filterFeedback, computeMetrics, computeDailyActivity } from "@/lib/analytics-helper";
 import { Star, TrendingUp, AlertCircle, MapPin, BarChart3, CheckCircle2 } from "lucide-react";
 
 export default function AnalyticsPage() {
+  const { has } = useAuth();
+  const canBenchmark = has({ feature: "branch_benchmarking" });
   const {
     business,
     locations,
@@ -156,7 +160,14 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Multi-Location Benchmarks */}
-        {locations.length > 0 && (
+        {locations.length > 0 && !canBenchmark && (
+          <div className="rounded-lg border border-blue-100 bg-blue-50 p-5">
+            <h3 className="text-sm font-semibold text-slate-900">Branch benchmarking is an Enterprise feature.</h3>
+            <p className="mt-1 text-xs text-slate-600">Compare customer satisfaction, feedback volume, and attention-needed rates across your locations with Enterprise.</p>
+            <Link href="/pricing/subscribe" className="mt-3 inline-flex text-xs font-semibold text-blue-700 underline underline-offset-4">Explore Enterprise</Link>
+          </div>
+        )}
+        {locations.length > 0 && canBenchmark && (
           <div className="border border-slate-200 rounded-lg bg-white shadow-card overflow-hidden">
             <div className="p-5 border-b border-slate-100 flex items-center justify-between">
               <div>
