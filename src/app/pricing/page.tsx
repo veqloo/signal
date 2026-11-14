@@ -242,10 +242,10 @@ export default function PricingPage() {
               </div>
 
               <Link
-                href="/contact?topic=enterprise"
+                href="/pricing/subscribe"
                 className="w-full inline-flex items-center justify-center gap-2 text-xs font-semibold text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 py-2.5 rounded-lg transition"
               >
-                <span>Talk to enterprise sales</span>
+                <span>Choose Enterprise plan</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
