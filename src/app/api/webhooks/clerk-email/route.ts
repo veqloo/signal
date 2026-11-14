@@ -69,9 +69,40 @@ export async function POST(req: Request) {
     .insert({ event_id: eventId, event_type: eventType || "unknown", status: "processing" });
 
   if (claimError?.code === "23505") {
-    return NextResponse.json({ success: true, duplicate: true });
-  }
-  if (claimError) {
+    const { data: existingEvent, error: lookupError } = await supabase
+      .from("clerk_webhook_events")
+      .select("status, created_at")
+      .eq("event_id", eventId)
+      .maybeSingle();
+
+    if (lookupError) {
+      return NextResponse.json({ error: "Could not inspect webhook event state" }, { status: 503 });
+    }
+
+    if (existingEvent?.status === "processed") {
+      return NextResponse.json({ success: true, duplicate: true });
+    }
+
+    // Recover events left in "processing" by a crashed serverless invocation.
+    const staleBefore = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+    if (existingEvent?.status === "processing" && existingEvent.created_at < staleBefore) {
+      const { data: reclaimedEvent, error: reclaimError } = await supabase
+        .from("clerk_webhook_events")
+        .update({ created_at: new Date().toISOString() })
+        .eq("event_id", eventId)
+        .eq("status", "processing")
+        .lt("created_at", staleBefore)
+        .select("event_id")
+        .maybeSingle();
+
+      if (reclaimError || !reclaimedEvent) {
+        return NextResponse.json({ error: "Webhook event is already being processed" }, { status: 503 });
+      }
+    } else {
+      // Ask Clerk to retry rather than acknowledging an event another invocation may still be processing.
+      return NextResponse.json({ error: "Webhook event is already being processed" }, { status: 503 });
+    }
+  } else if (claimError) {
     console.error("[Clerk Webhook] Could not claim event:", claimError.code);
     return NextResponse.json({ error: "Could not persist webhook event" }, { status: 503 });
   }
