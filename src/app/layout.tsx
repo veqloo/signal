@@ -32,12 +32,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en" className="h-full bg-slate-50">
-        <body className="min-h-full flex flex-col text-slate-900 bg-slate-50 antialiased selection:bg-slate-900 selection:text-white">
+    <html lang="en" className="h-full bg-slate-50">
+      <body className="min-h-full flex flex-col text-slate-900 bg-slate-50 antialiased selection:bg-slate-900 selection:text-white">
+        <ClerkProvider>
           <WorkspaceProvider>{children}</WorkspaceProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+        </ClerkProvider>
+      </body>
+    </html>
   );
 }
