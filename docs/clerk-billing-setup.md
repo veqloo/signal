@@ -61,6 +61,18 @@ Clerk Billing processes payments through Stripe. Clerk currently lists a 0.7% Bi
 
 Production payment processing requires a Stripe account that satisfies Stripe's eligibility and legal requirements. Use an adult/legal business representative where required; do not use a minor's personal account to bypass provider requirements.
 
+## Clerk webhook and identity synchronization
+
+Configure a Clerk webhook endpoint at:
+
+`https://signal.veqlo.me/api/webhooks/clerk-email`
+
+Subscribe it to `user.created` and `user.updated`. The endpoint verifies Svix signatures, stores event IDs in `public.clerk_webhook_events` for durable idempotency, and synchronizes Clerk profiles into Supabase. It requires the Supabase service-role key as a server-only secret.
+
+For each imported legacy user, set Clerk `public_metadata.legacy_auth_id` to that user's previous Supabase Auth UUID. The webhook then updates `businesses.owner_id` and `business_memberships.user_id` from the old UUID to the new Clerk user ID without deleting business data. Do not bulk-import accounts until this mapping has been verified on a test user.
+
+If using Clerk custom email delivery through Resend, configure the supported Clerk email delivery event for this endpoint and subscribe to `email.created`. If using Clerk's native custom sending domain instead, leave custom Resend delivery disabled; Clerk will send authentication emails itself. Never configure both delivery paths for the same template.
+
 ## Required production environment
 
 Set these in the Vercel project that actually serves Signal:
@@ -68,6 +80,9 @@ Set these in the Vercel project that actually serves Signal:
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` — production Clerk publishable key (public).
 - `CLERK_SECRET_KEY` — production Clerk secret (secret).
 - `CLERK_WEBHOOK_SIGNING_SECRET` — signing secret for the configured Clerk webhook (secret).
+- `SUPABASE_URL` — Supabase project URL (server-side).
+- `SUPABASE_SERVICE_ROLE_KEY` — Supabase service-role key for webhook profile/ownership sync (secret; server-side only).
+- `RESEND_API_KEY` — only required if Clerk custom email delivery is routed through Resend (secret).
 - `NEXT_PUBLIC_APP_URL=https://signal.veqlo.me` — canonical production URL.
 
 Never commit keys or paste them into source files. The Vercel project currently has no Clerk production keys, so checkout and authentication cannot be verified until the selected Clerk app is linked and its production keys are provisioned.
