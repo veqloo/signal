@@ -35,7 +35,7 @@ export default function PricingPage() {
               Simple plans for businesses of any size.
             </h1>
             <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-              Start free with no credit card required. Upgrade as your locations grow and your customer feedback scales.
+              Start free with no credit card required. Upgrade when your analytics and reporting needs grow.
             </p>
 
             {/* Billing Toggle */}
@@ -71,7 +71,7 @@ export default function PricingPage() {
               >
                 <span>Annual billing</span>
                 <span className="text-[10px] font-bold uppercase bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">
-                  Save 20%
+                  Annual rate
                 </span>
               </span>
             </div>
@@ -91,7 +91,7 @@ export default function PricingPage() {
                   </span>
                 </div>
                 <p className="text-xs text-slate-600 mb-6 min-h-[36px]">
-                  Essential feedback collection for single-location cafés, boutique shops, and studios.
+                  Essential feedback collection for cafés, boutique shops, and studios.
                 </p>
                 <div className="mb-6 pb-6 border-b border-slate-100">
                   <div className="flex items-baseline gap-1">
@@ -108,11 +108,11 @@ export default function PricingPage() {
                   <ul className="space-y-2.5 text-xs text-slate-600">
                     <li className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>1 Physical Business Location</span>
+                      <span>One workspace for your business</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Up to 100 customer responses / month</span>
+                      <span>Customer feedback collection via QR and direct link</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -152,11 +152,11 @@ export default function PricingPage() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-bold text-slate-900">Pro</h3>
                   <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                    High Volume
+                    Advanced tools
                   </span>
                 </div>
                 <p className="text-xs text-slate-600 mb-6 min-h-[36px]">
-                  For expanding restaurants, busy retail branches, and businesses needing deep sentiment triage.
+                  For businesses that need deeper analytics and print-ready feedback materials.
                 </p>
                 <div className="mb-6 pb-6 border-b border-slate-100">
                   <div className="flex items-baseline gap-1">
@@ -177,23 +177,11 @@ export default function PricingPage() {
                   <ul className="space-y-2.5 text-xs text-slate-600">
                     <li className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span className="font-medium text-slate-900">Up to 3 Physical Locations</span>
+                      <span className="font-medium text-slate-900">Print-ready QR Studio (Table tents, counter cards)</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span className="font-medium text-slate-900">Unlimited customer responses</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Print-ready QR Studio (Table tents, counter cards)</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Instant negative feedback email notifications</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Internal staff triage notes & resolution status</span>
+                      <span>Private internal team notes</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -204,10 +192,10 @@ export default function PricingPage() {
               </div>
 
               <Link
-                href="/signup?plan=pro"
+                href="/pricing/subscribe"
                 className="w-full inline-flex items-center justify-center gap-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 py-2.5 rounded-lg transition shadow-sm"
               >
-                <span>Start 14-day Pro trial</span>
+                <span>Choose Pro plan</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -222,7 +210,7 @@ export default function PricingPage() {
                   </span>
                 </div>
                 <p className="text-xs text-slate-600 mb-6 min-h-[36px]">
-                  Multi-unit operators and enterprise hospitality brands requiring centralized governance.
+                  For multi-location operators that need consolidated reporting and branch comparisons.
                 </p>
                 <div className="mb-6 pb-6 border-b border-slate-100">
                   <div className="flex items-baseline gap-1">
@@ -243,37 +231,21 @@ export default function PricingPage() {
                   <ul className="space-y-2.5 text-xs text-slate-600">
                     <li className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span className="font-medium text-slate-900">Unlimited Locations</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
                       <span>Executive PDF summary reports</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-emerald-600 shrink-0" />
                       <span>Multi-branch comparative benchmarking</span>
                     </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Multi-seat role-based access control</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Custom domain options for feedback pages</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Dedicated technical account manager</span>
-                    </li>
                   </ul>
                 </div>
               </div>
 
               <Link
-                href="/contact?topic=enterprise"
+                href="/pricing/subscribe"
                 className="w-full inline-flex items-center justify-center gap-2 text-xs font-semibold text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 py-2.5 rounded-lg transition"
               >
-                <span>Talk to enterprise sales</span>
+                <span>Choose Enterprise plan</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -302,18 +274,6 @@ export default function PricingPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-600">
                   <tr>
-                    <td className="py-3.5 px-4 font-medium text-slate-900">Physical Locations Included</td>
-                    <td className="py-3.5 px-4 text-center">1</td>
-                    <td className="py-3.5 px-4 text-center bg-slate-50 font-semibold text-slate-900">Up to 3</td>
-                    <td className="py-3.5 px-4 text-center font-semibold text-slate-900">Unlimited</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3.5 px-4 font-medium text-slate-900">Monthly Feedback Submissions</td>
-                    <td className="py-3.5 px-4 text-center">100 / mo</td>
-                    <td className="py-3.5 px-4 text-center bg-slate-50 font-semibold text-slate-900">Unlimited</td>
-                    <td className="py-3.5 px-4 text-center font-semibold text-slate-900">Unlimited</td>
-                  </tr>
-                  <tr>
                     <td className="py-3.5 px-4 font-medium text-slate-900">Zero Customer Registration / Login</td>
                     <td className="py-3.5 px-4 text-center text-emerald-600">Yes</td>
                     <td className="py-3.5 px-4 text-center bg-slate-50 text-emerald-600">Yes</td>
@@ -326,19 +286,25 @@ export default function PricingPage() {
                     <td className="py-3.5 px-4 text-center text-emerald-600">Yes</td>
                   </tr>
                   <tr>
-                    <td className="py-3.5 px-4 font-medium text-slate-900">Printable QR Kit (Table Tents, Stickers)</td>
+                    <td className="py-3.5 px-4 font-medium text-slate-900">Print-ready QR Studio</td>
                     <td className="py-3.5 px-4 text-center">Digital Only</td>
                     <td className="py-3.5 px-4 text-center bg-slate-50 text-emerald-600">Complete Studio</td>
-                    <td className="py-3.5 px-4 text-center text-emerald-600">Complete Studio + Vector</td>
+                    <td className="py-3.5 px-4 text-center text-emerald-600">Complete Studio</td>
                   </tr>
                   <tr>
-                    <td className="py-3.5 px-4 font-medium text-slate-900">Internal Triage & Resolution Notes</td>
+                    <td className="py-3.5 px-4 font-medium text-slate-900">Private Internal Team Notes</td>
                     <td className="py-3.5 px-4 text-center text-slate-400">—</td>
                     <td className="py-3.5 px-4 text-center bg-slate-50 text-emerald-600">Yes</td>
                     <td className="py-3.5 px-4 text-center text-emerald-600">Yes</td>
                   </tr>
                   <tr>
-                    <td className="py-3.5 px-4 font-medium text-slate-900">Executive Vector PDF Reports</td>
+                    <td className="py-3.5 px-4 font-medium text-slate-900">Advanced sentiment & day-of-week analytics</td>
+                    <td className="py-3.5 px-4 text-center text-slate-400">—</td>
+                    <td className="py-3.5 px-4 text-center bg-slate-50 text-emerald-600">Yes</td>
+                    <td className="py-3.5 px-4 text-center text-emerald-600">Yes</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3.5 px-4 font-medium text-slate-900">Executive PDF Reports</td>
                     <td className="py-3.5 px-4 text-center text-slate-400">—</td>
                     <td className="py-3.5 px-4 text-center bg-slate-50 text-slate-400">—</td>
                     <td className="py-3.5 px-4 text-center text-emerald-600">Automated & On-demand</td>
@@ -354,12 +320,6 @@ export default function PricingPage() {
                     <td className="py-3.5 px-4 text-center text-emerald-600">Yes</td>
                     <td className="py-3.5 px-4 text-center bg-slate-50 text-emerald-600">Yes</td>
                     <td className="py-3.5 px-4 text-center text-emerald-600">Yes</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3.5 px-4 font-medium text-slate-900">Support Level</td>
-                    <td className="py-3.5 px-4 text-center">Community</td>
-                    <td className="py-3.5 px-4 text-center bg-slate-50">Priority Email</td>
-                    <td className="py-3.5 px-4 text-center font-semibold text-slate-900">Dedicated SLA</td>
                   </tr>
                 </tbody>
               </table>
@@ -382,7 +342,7 @@ export default function PricingPage() {
                 Can I really use Signal for free?
               </h4>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Yes. Our Starter plan is 100% free forever for single-location businesses up to 100 responses per month. No hidden fees or surprise trial expirations.
+                Yes. Starter is free forever and includes feedback collection, standard QR codes, the feedback inbox, and CSV export. No hidden fees or surprise trial expirations.
               </p>
             </div>
 

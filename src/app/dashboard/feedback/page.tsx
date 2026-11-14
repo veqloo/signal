@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import { useWorkspace } from "@/lib/workspace-context";
 import { Header } from "@/components/dashboard/Header";
@@ -24,6 +25,8 @@ import {
 } from "lucide-react";
 
 export default function FeedbackInboxPage() {
+  const { has } = useAuth();
+  const canTriage = has({ feature: "feedback_triage" });
   const {
     business,
     locations,
@@ -126,15 +129,19 @@ export default function FeedbackInboxPage() {
   };
 
   const handleSaveNote = async () => {
-    if (!selectedItem) return;
-    await updateFeedbackStatus(selectedItem.id, selectedItem.status, internalNote);
-    setSelectedItem({ ...selectedItem, internal_notes: internalNote });
+    if (!selectedItem || !canTriage) return;
+    const saved = await updateFeedbackStatus(selectedItem.id, selectedItem.status, internalNote);
+    if (saved) setSelectedItem({ ...selectedItem, internal_notes: internalNote });
   };
 
   const handleStatusChange = async (status: Feedback["status"]) => {
     if (!selectedItem) return;
-    await updateFeedbackStatus(selectedItem.id, status, internalNote);
-    setSelectedItem({ ...selectedItem, status });
+    const saved = await updateFeedbackStatus(
+      selectedItem.id,
+      status,
+      canTriage ? internalNote : undefined
+    );
+    if (saved) setSelectedItem({ ...selectedItem, status });
   };
 
   return (
@@ -477,23 +484,31 @@ export default function FeedbackInboxPage() {
               </div>
 
               {/* Internal Team Notes */}
-              <div>
-                <label className="text-xs font-semibold text-slate-900 block mb-2">
-                  Internal Team Notes
-                </label>
-                <textarea
-                  value={internalNote}
-                  onChange={(e) => setInternalNote(e.target.value)}
-                  placeholder="Add notes for your team (e.g. 'Addressed with morning shift manager, replaced beverage on return')..."
-                  className="w-full h-24 p-3 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900"
-                />
-                <button
-                  onClick={handleSaveNote}
-                  className="mt-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-md transition shadow-sm"
-                >
-                  Save Internal Note
-                </button>
-              </div>
+              {canTriage ? (
+                <div>
+                  <label className="text-xs font-semibold text-slate-900 block mb-2">
+                    Internal Team Notes
+                  </label>
+                  <textarea
+                    value={internalNote}
+                    onChange={(e) => setInternalNote(e.target.value)}
+                    placeholder="Add notes for your team..."
+                    className="w-full h-24 p-3 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900"
+                  />
+                  <button
+                    onClick={handleSaveNote}
+                    className="mt-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-md transition shadow-sm"
+                  >
+                    Save Internal Note
+                  </button>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
+                  <p className="text-xs font-semibold text-slate-900">Internal team notes are included with Pro.</p>
+                  <p className="mt-1 text-[11px] text-slate-600">Upgrade to keep private resolution notes alongside customer feedback.</p>
+                  <Link href="/pricing/subscribe" className="mt-2 inline-flex text-xs font-semibold text-blue-700 underline underline-offset-4">View Pro plan</Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
