@@ -48,7 +48,7 @@ Do not create or advertise response-volume, location-count, email-alert, team-ac
 
 ## Cost and payment notes
 
-Clerk Billing processes payments through Stripe. Clerk currently lists a 0.7% Billing fee in addition to Stripe's processing fees. Review current pricing and payment terms before enabling live checkout.
+Clerk Billing processes payments through Stripe. Clerk currently lists a 0.7% Billing fee in addition to Stripe's processing fees. Its current limitations are material for EU sales: Billing is USD-only, does not calculate VAT/tax, and does not support payment methods requiring 3D Secure (3DS). Clerk is not a Merchant of Record. Do not enable live EU checkout until tax compliance and payment authentication have been solved and tested. For a Spain/EU launch, evaluate direct Stripe Billing or another provider that supports VAT and 3DS; Clerk can remain the authentication provider.
 
 Production payment processing requires a Stripe account that satisfies Stripe's eligibility and legal requirements. Use an adult/legal business representative where required; do not use a minor's personal account to bypass provider requirements.
 
