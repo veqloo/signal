@@ -130,14 +130,18 @@ export default function FeedbackInboxPage() {
 
   const handleSaveNote = async () => {
     if (!selectedItem || !canTriage) return;
-    await updateFeedbackStatus(selectedItem.id, selectedItem.status, internalNote);
-    setSelectedItem({ ...selectedItem, internal_notes: internalNote });
+    const saved = await updateFeedbackStatus(selectedItem.id, selectedItem.status, internalNote);
+    if (saved) setSelectedItem({ ...selectedItem, internal_notes: internalNote });
   };
 
   const handleStatusChange = async (status: Feedback["status"]) => {
     if (!selectedItem) return;
-    await updateFeedbackStatus(selectedItem.id, status, internalNote);
-    setSelectedItem({ ...selectedItem, status });
+    const saved = await updateFeedbackStatus(
+      selectedItem.id,
+      status,
+      canTriage ? internalNote : undefined
+    );
+    if (saved) setSelectedItem({ ...selectedItem, status });
   };
 
   return (
