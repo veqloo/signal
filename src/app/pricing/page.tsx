@@ -91,7 +91,7 @@ export default function PricingPage() {
                   </span>
                 </div>
                 <p className="text-xs text-slate-600 mb-6 min-h-[36px]">
-                  Essential feedback collection for single-location cafés, boutique shops, and studios.
+                  Essential feedback collection for cafés, boutique shops, and studios.
                 </p>
                 <div className="mb-6 pb-6 border-b border-slate-100">
                   <div className="flex items-baseline gap-1">
@@ -152,7 +152,7 @@ export default function PricingPage() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-bold text-slate-900">Pro</h3>
                   <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                    High Volume
+                    Advanced tools
                   </span>
                 </div>
                 <p className="text-xs text-slate-600 mb-6 min-h-[36px]">
@@ -181,7 +181,7 @@ export default function PricingPage() {
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Internal staff triage notes & resolution status</span>
+                      <span>Private internal team notes</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -292,7 +292,7 @@ export default function PricingPage() {
                     <td className="py-3.5 px-4 text-center text-emerald-600">Complete Studio</td>
                   </tr>
                   <tr>
-                    <td className="py-3.5 px-4 font-medium text-slate-900">Internal Triage & Resolution Notes</td>
+                    <td className="py-3.5 px-4 font-medium text-slate-900">Private Internal Team Notes</td>
                     <td className="py-3.5 px-4 text-center text-slate-400">—</td>
                     <td className="py-3.5 px-4 text-center bg-slate-50 text-emerald-600">Yes</td>
                     <td className="py-3.5 px-4 text-center text-emerald-600">Yes</td>
