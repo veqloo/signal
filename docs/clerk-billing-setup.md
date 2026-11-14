@@ -51,7 +51,7 @@ The current app must still enforce quantitative limits (for example, 100 feedbac
 2. Open Billing and enable **User Billing**.
 3. Use the Clerk development payment gateway first; do not connect a live Stripe account during development.
 4. Create the plans and Features above. Mark the three plans publicly available so they appear in PricingTable.
-5. Configure a production instance with Clerk's own Frontend API domain `accounts.signal.veqlo.me`; keep the application itself at `https://signal.veqlo.me`. Use the exact DNS target Clerk generates in its Dashboard/CLI. Do not point the Clerk CNAME at Vercel or reuse the app host for the Clerk Frontend API.
+5. Configure a production instance with Clerk's own Frontend API domain `accounts.veqlo.me`; keep the application itself at `https://signal.veqlo.me`. Use the exact DNS target Clerk generates in its Dashboard/CLI. Do not point the Clerk CNAME at Vercel or reuse the app host for the Clerk Frontend API.
 6. Configure the production payment gateway and legal/business details before accepting real payments.
 7. Test subscribe, cancel, upgrade, downgrade, failed payment, renewal, and feature revocation with test payment methods.
 
