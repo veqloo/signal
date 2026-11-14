@@ -1,3 +1,12 @@
+export interface UserProfile {
+  id: string;
+  email: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Business {
   id: string;
   owner_id?: string;
@@ -6,6 +15,9 @@ export interface Business {
   category: string | null;
   welcome_message: string | null;
   google_review_url: string | null;
+  logo_url?: string | null;
+  onboarding_completed?: boolean;
+  feedback_categories?: string[];
   created_at?: string;
   updated_at?: string;
 }
@@ -17,6 +29,14 @@ export interface BusinessLocation {
   slug: string;
   address: string | null;
   is_active: boolean;
+  created_at?: string;
+}
+
+export interface BusinessMembership {
+  id: string;
+  business_id: string;
+  user_id: string;
+  role: "owner" | "admin" | "member";
   created_at?: string;
 }
 
@@ -48,3 +68,12 @@ export interface NotificationItem {
 }
 
 export type DateRange = "today" | "7d" | "30d" | "90d" | "all";
+
+export interface OnboardingState {
+  businessName: string;
+  category: string;
+  locationName: string;
+  locationAddress: string;
+  googleReviewUrl: string;
+  welcomeMessage: string;
+}

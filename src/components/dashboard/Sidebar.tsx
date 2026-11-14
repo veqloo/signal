@@ -33,7 +33,7 @@ export function Sidebar({ onOpenNotifications }: { onOpenNotifications?: () => v
     { href: "/dashboard/feedback", label: "Feedback Inbox", icon: MessagesSquare },
     { href: "/dashboard/analytics", label: "Analytics & Trends", icon: BarChart3 },
     { href: "/dashboard/locations", label: "Locations", icon: MapPin, count: locations.length },
-    { href: "/dashboard/qr", label: "QR Studio & Print", icon: QrCode },
+    { href: "/dashboard/qr-codes", label: "QR Codes & Print", icon: QrCode },
     { href: "/dashboard/reports", label: "PDF Reports", icon: FileText },
     { href: "/dashboard/settings", label: "Settings", icon: Settings },
   ];

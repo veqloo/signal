@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useWorkspace } from "@/lib/workspace-context";
 import { Header } from "@/components/dashboard/Header";
 import { Feedback } from "@/types";
@@ -18,6 +19,8 @@ import {
   X,
   MessageSquare,
   ArrowUpDown,
+  QrCode,
+  ArrowRight,
 } from "lucide-react";
 
 export default function FeedbackInboxPage() {
@@ -234,8 +237,50 @@ export default function FeedbackInboxPage() {
         {/* Feedback List Table */}
         <div className="bg-white border border-slate-200 rounded-lg shadow-card overflow-hidden">
           {items.length === 0 ? (
-            <div className="p-12 text-center text-xs text-slate-500">
-              No customer feedback matched your current filters.
+            <div className="p-12 text-center space-y-3">
+              {feedback.length === 0 ? (
+                <>
+                  <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+                    <QrCode className="w-5 h-5" />
+                  </div>
+                  <h4 className="text-sm font-semibold text-slate-900">No customer feedback recorded yet</h4>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    Customer feedback submitted via your table QR codes or direct URL will appear here in real-time.
+                  </p>
+                  <div className="pt-2 flex items-center justify-center gap-3">
+                    <Link
+                      href="/dashboard/qr"
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-900 bg-slate-100 hover:bg-slate-200 px-3.5 py-1.5 rounded-md transition"
+                    >
+                      <span>Open QR Studio</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                    <a
+                      href={`/f/${business?.slug || "demo"}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:underline"
+                    >
+                      <span>Submit test feedback</span>
+                    </a>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs text-slate-500">No customer feedback matched your current filters.</p>
+                  <button
+                    onClick={() => {
+                      setSearchQuery("");
+                      setRatingFilter("all");
+                      setCategoryFilter("all");
+                      setStatusFilter("all");
+                    }}
+                    className="text-xs font-semibold text-blue-600 hover:underline"
+                  >
+                    Clear all filters
+                  </button>
+                </>
+              )}
             </div>
           ) : (
             <div className="divide-y divide-slate-100">

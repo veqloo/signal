@@ -5,7 +5,7 @@ export function Footer() {
   return (
     <footer className="w-full border-t border-slate-200 bg-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mb-12">
           {/* Brand Info */}
           <div className="md:col-span-2 space-y-3">
             <div className="flex items-center gap-2">
@@ -16,7 +16,7 @@ export function Footer() {
                 Veqlo Product
               </span>
             </div>
-            <p className="text-sm text-slate-600 max-w-sm leading-relaxed">
+            <p className="text-xs text-slate-600 max-w-sm leading-relaxed">
               Listen beyond the rating. Modern, frictionless customer feedback and real-time sentiment intelligence for businesses that value customer trust.
             </p>
             <div className="pt-2 text-xs text-slate-500">
@@ -34,15 +34,25 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Product links */}
+          {/* Product Navigation */}
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-900 mb-3">
               Product
             </h4>
-            <ul className="space-y-2 text-sm text-slate-600">
+            <ul className="space-y-2 text-xs text-slate-600">
               <li>
-                <Link href="#features" className="hover:text-slate-900 transition">
-                  Overview & Features
+                <Link href="/product" className="hover:text-slate-900 transition">
+                  Overview
+                </Link>
+              </li>
+              <li>
+                <Link href="/features" className="hover:text-slate-900 transition">
+                  Features
+                </Link>
+              </li>
+              <li>
+                <Link href="/pricing" className="hover:text-slate-900 transition">
+                  Pricing Plans
                 </Link>
               </li>
               <li>
@@ -52,18 +62,43 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/dashboard/qr" className="hover:text-slate-900 transition">
-                  QR Code Studio
+                  QR Studio
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Company & Support */}
+          <div>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-900 mb-3">
+              Company
+            </h4>
+            <ul className="space-y-2 text-xs text-slate-600">
+              <li>
+                <Link href="/about" className="hover:text-slate-900 transition">
+                  About Us
                 </Link>
               </li>
               <li>
-                <Link href="/dashboard/analytics" className="hover:text-slate-900 transition">
-                  Sentiment Analytics
+                <Link href="/contact" className="hover:text-slate-900 transition">
+                  Contact & Sales
                 </Link>
               </li>
               <li>
-                <Link href="/dashboard/reports" className="hover:text-slate-900 transition">
-                  Executive PDF Reports
-                </Link>
+                <a
+                  href="mailto:support@veqlo.me"
+                  className="hover:text-slate-900 transition"
+                >
+                  Technical Support
+                </a>
+              </li>
+              <li>
+                <a
+                  href="mailto:security@veqlo.me"
+                  className="hover:text-slate-900 transition"
+                >
+                  Security Inquiries
+                </a>
               </li>
             </ul>
           </div>
@@ -73,16 +108,19 @@ export function Footer() {
             <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-900 mb-3">
               Veqlo Ecosystem
             </h4>
-            <ul className="space-y-2 text-sm text-slate-600">
+            <ul className="space-y-2 text-xs text-slate-600">
               <li>
                 <a
                   href="https://veqlo.me"
                   target="_blank"
                   rel="noreferrer"
-                  className="hover:text-slate-900 transition inline-flex items-center gap-1"
+                  className="hover:text-slate-900 transition inline-flex items-center gap-1 font-medium text-slate-900"
                 >
-                  Veqlo Home <ArrowUpRight className="w-3 h-3" />
+                  veqlo.me <ArrowUpRight className="w-3 h-3" />
                 </a>
+              </li>
+              <li>
+                <span className="text-slate-400">Signal (Feedback)</span>
               </li>
               <li>
                 <span className="text-slate-400">Veqlo Quick (Desktop)</span>
@@ -99,7 +137,7 @@ export function Footer() {
 
         <div className="pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <div>© {new Date().getFullYear()} Veqlo. All rights reserved.</div>
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
             <span>No tracking cookies on feedback forms</span>
             <span>Unbiased Google Review invitations</span>
             <span>GDPR compliant</span>

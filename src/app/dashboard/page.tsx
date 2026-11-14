@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useWorkspace } from "@/lib/workspace-context";
 import { Header } from "@/components/dashboard/Header";
 import { MetricsCards } from "@/components/dashboard/MetricsCards";
@@ -11,7 +12,7 @@ import { CategoryBreakdown } from "@/components/dashboard/CategoryBreakdown";
 import { RecentFeedback } from "@/components/dashboard/RecentFeedback";
 import { filterFeedback, computeMetrics, computeDailyActivity } from "@/lib/analytics-helper";
 import { Feedback } from "@/types";
-import { Star, MessageSquare, X, Check, Flag, MapPin, Tag } from "lucide-react";
+import { Star, MessageSquare, X, Check, Flag, MapPin, Tag, QrCode, Settings, ExternalLink, ArrowRight } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 export default function DashboardOverviewPage() {
@@ -67,6 +68,97 @@ export default function DashboardOverviewPage() {
       />
 
       <div className="max-w-6xl mx-auto px-6 py-6 space-y-6">
+        {/* Zero-Feedback Quickstart Banner for new businesses */}
+        {feedback.length === 0 && (
+          <div className="bg-white border border-slate-200 rounded-xl p-6 sm:p-8 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">
+                  Ready for feedback
+                </span>
+                <h3 className="text-lg font-bold text-slate-900 mt-2">
+                  Your feedback channel is live for {business?.name || "your business"}
+                </h3>
+                <p className="text-xs text-slate-600 mt-1 max-w-xl">
+                  You haven&apos;t received any customer responses yet. Print your QR codes or test your direct feedback link to see responses populate here in real-time.
+                </p>
+              </div>
+
+              <a
+                href={`/f/${business?.slug || "demo"}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-4 py-2.5 rounded-lg transition shrink-0"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Open public feedback form</span>
+              </a>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+              <Link
+                href="/dashboard/qr"
+                className="p-4 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50/50 transition group flex flex-col justify-between"
+              >
+                <div className="space-y-2">
+                  <div className="w-8 h-8 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <QrCode className="w-4 h-4" />
+                  </div>
+                  <h4 className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition">
+                    1. Print table QR kits
+                  </h4>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    Generate printable counter cards, table tents, and stickers in QR Studio.
+                  </p>
+                </div>
+                <span className="text-[11px] font-medium text-blue-600 mt-3 inline-flex items-center gap-1">
+                  Open QR Studio <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition" />
+                </span>
+              </Link>
+
+              <Link
+                href="/dashboard/locations"
+                className="p-4 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50/50 transition group flex flex-col justify-between"
+              >
+                <div className="space-y-2">
+                  <div className="w-8 h-8 rounded-md bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <h4 className="text-xs font-bold text-slate-900 group-hover:text-emerald-600 transition">
+                    2. Configure locations
+                  </h4>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    Add tables, counters, or separate branches to compare performance across locations.
+                  </p>
+                </div>
+                <span className="text-[11px] font-medium text-emerald-600 mt-3 inline-flex items-center gap-1">
+                  Manage branches <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition" />
+                </span>
+              </Link>
+
+              <Link
+                href="/dashboard/settings"
+                className="p-4 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50/50 transition group flex flex-col justify-between"
+              >
+                <div className="space-y-2">
+                  <div className="w-8 h-8 rounded-md bg-purple-50 text-purple-600 flex items-center justify-center">
+                    <Settings className="w-4 h-4" />
+                  </div>
+                  <h4 className="text-xs font-bold text-slate-900 group-hover:text-purple-600 transition">
+                    3. Link Google Reviews
+                  </h4>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    Invite customers to replicate their rating on your Google Business profile after feedback.
+                  </p>
+                </div>
+                <span className="text-[11px] font-medium text-purple-600 mt-3 inline-flex items-center gap-1">
+                  Configure settings <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition" />
+                </span>
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Top Metric Cards */}
         <MetricsCards
           averageRating={metrics.averageRating}
