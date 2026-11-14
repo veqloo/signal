@@ -204,10 +204,10 @@ export default function PricingPage() {
               </div>
 
               <Link
-                href="/signup?plan=pro"
+                href="/pricing/subscribe"
                 className="w-full inline-flex items-center justify-center gap-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 py-2.5 rounded-lg transition shadow-sm"
               >
-                <span>Start 14-day Pro trial</span>
+                <span>Choose Pro plan</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
