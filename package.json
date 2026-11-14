@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "tsc --noEmit",
     "check": "node scripts/check.mjs"
   },
   "dependencies": {
@@ -15,12 +15,12 @@
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.46.1",
     "clsx": "^2.1.1",
-    "jspdf": "^2.5.2",
+    "jspdf": "4.2.1",
     "lucide-react": "^0.460.0",
-    "next": "15.5.28",
+    "next": "16.4.6",
     "qrcode": "^1.5.4",
-    "react": "19.2.9",
-    "react-dom": "19.2.9",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "resend": "^6.38.1",
     "svix": "^2.10.0",
     "tailwind-merge": "^2.5.4"
