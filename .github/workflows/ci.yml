@@ -13,9 +13,21 @@ jobs:
         with:
           node-version: 22
           cache: "npm"
+      - name: Regenerate lockfile for the pinned dependency set
+        run: npm install --package-lock-only --ignore-scripts
       - name: Install dependencies
         run: npm ci
       - name: Validate legacy frontend module and configuration
         run: node scripts/check.mjs
       - name: Build Next.js application & check types
+        env:
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_c2lnbmFsLmNsZXJrLmFjY291bnRzLmRldiQ
+          NEXT_PUBLIC_APP_URL: https://signal.veqlo.me
         run: npm run build
+      - name: Upload generated lockfile
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: signal-package-lock
+          path: package-lock.json
+          retention-days: 7
