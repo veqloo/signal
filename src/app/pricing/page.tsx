@@ -185,14 +185,6 @@ export default function PricingPage() {
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Print-ready QR Studio (Table tents, counter cards)</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Internal staff triage notes & resolution status</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
                       <span>Advanced sentiment & day-of-week analytics</span>
                     </li>
                   </ul>
@@ -297,7 +289,7 @@ export default function PricingPage() {
                     <td className="py-3.5 px-4 font-medium text-slate-900">Print-ready QR Studio</td>
                     <td className="py-3.5 px-4 text-center">Digital Only</td>
                     <td className="py-3.5 px-4 text-center bg-slate-50 text-emerald-600">Complete Studio</td>
-                    <td className="py-3.5 px-4 text-center text-emerald-600">Complete Studio + Vector</td>
+                    <td className="py-3.5 px-4 text-center text-emerald-600">Complete Studio</td>
                   </tr>
                   <tr>
                     <td className="py-3.5 px-4 font-medium text-slate-900">Internal Triage & Resolution Notes</td>
@@ -350,7 +342,7 @@ export default function PricingPage() {
                 Can I really use Signal for free?
               </h4>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Yes. Our Starter plan is 100% free forever for single-location businesses up to 100 responses per month. No hidden fees or surprise trial expirations.
+                Yes. Starter is free forever and includes feedback collection, standard QR codes, the feedback inbox, and CSV export. No hidden fees or surprise trial expirations.
               </p>
             </div>
 
