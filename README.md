@@ -1,75 +1,138 @@
 # Signal by Veqlo
 
-Customer feedback platform — listen beyond the rating.
+> **Listen beyond the rating.**  
+> Customer feedback and real-time satisfaction intelligence platform for cafés, restaurants, retail shops, and service businesses.
 
-Signal helps businesses collect direct customer feedback, understand recurring patterns and improve the customer experience.
+Signal helps businesses understand what their customers really think. Customers scan a clean QR code, rate their experience from 1 to 5 stars, select a category, and optionally leave a direct written comment in 10 seconds. No apps, downloads, or registration required.
 
-## Current MVP
+Businesses access a private, real-time dashboard to monitor customer satisfaction trends, triage operational issues, compare multiple branches, and download executive reports.
 
-- Email/password account creation and sign-in with Supabase Auth.
-- Business workspace with owner-scoped access (Postgres Row Level Security).
-- Dashboard with response count, average rating, positive feedback and attention-needed counts.
-- Feedback inbox with rating/category filters and CSV export.
-- Public feedback form, shareable link and downloadable QR code.
-- Optional Google review invitation shown equally to every customer, regardless of rating.
-- Public submissions handled by a Supabase Edge Function; no service-role key is shipped to the browser.
+Live Product: **[signal.veqlo.me](https://signal.veqlo.me)**  
+Parent Studio: **[veqlo.me](https://veqlo.me)**
 
-## Stack
+---
 
-- Static HTML/CSS/JavaScript frontend, deployed on Vercel.
-- Supabase Auth and Postgres.
-- Supabase Edge Function: `signal-feedback`.
-- Lucide icons and QRCode.js.
+## Key Features
 
-## Supabase project
+### 1. Frictionless Customer Experience
+- **Zero Registration**: Customers scan and submit feedback in under 10 seconds.
+- **Mobile-First Interface**: Designed with minimalist typography, high contrast, and tactile micro-interactions.
+- **Categorized Feedback**: Patrons tag specific areas (e.g. *Service, Quality, Speed, Cleanliness, Atmosphere, Value*).
+- **Multi-Location Routing**: Automatic branch attribution via location-specific QR codes (`/f/[slug]?loc=[location]`).
+- **Unbiased Google Reviews**: Every customer receives an equal, voluntary opportunity to leave a public Google review. Signal strictly complies with Google and FTC guidelines by never gating, hiding, or redirecting negative feedback.
 
-- Project ref: `hdwptihsatasnhazldmk`
-- Region: `eu-west-3`
-- API URL: `https://hdwptihsatasnhazldmk.supabase.co`
-- Public publishable key is configured in `index.html`. This key is designed for browser use; database access is restricted by RLS.
-- Never put the Supabase service-role key in frontend code.
+### 2. Multi-Branch & Location Intelligence
+- Support for multiple physical branches, cafés, table sections, or retail counters.
+- Benchmark locations side-by-side on average score, response volume, and detractor risk.
+- Independent QR codes and shareable links per location.
 
-The database schema is managed by migrations in `supabase/migrations/`. The feedback Edge Function is deployed to the project and uses Supabase's server-side environment variables.
+### 3. Executive Intelligence Dashboard
+- **Key KPIs**: Real-time average rating, total volume, positive sentiment percentage (4–5 stars), attention needed count (1–2 stars), and estimated Net Promoter Score (NPS).
+- **Date Range Filters**: Filter instantly by Today, Last 7 Days, Last 30 Days, Last 90 Days, or All Time.
+- **Interactive Visualizations**:
+  - Daily response volume timeline.
+  - Satisfaction score trend curve over time.
+  - 5-to-1 star rating distribution with interactive click-to-filter.
+  - Category performance breakdown highlighting operational pain points.
 
-## Run locally
+### 4. Feedback Inbox & Triage Workflow
+- Full feedback stream with real-time search across comments and categories.
+- Multi-dimensional filters (rating, category, status, location).
+- Triage statuses: `New`, `Read`, `Flagged Alert`, and `Resolved`.
+- Internal team collaboration notes attached directly to customer responses.
+- RFC-compliant CSV export for spreadsheet analysis.
 
-Serve the repository root with any static web server, for example:
+### 5. Downloadable Executive PDF Reports
+- Built-in vector PDF generator (`jspdf`) creating executive monthly summaries.
+- Formatted with KPIs, rating distribution, category benchmarks, and highlighted customer feedback for leadership or team syncs.
+
+### 6. QR Studio & Printable Stand Templates
+- High-resolution vector QR code generator for main business and individual branches.
+- Ready-to-print formats formatted for cardstock:
+  - Foldable Table Tent stand.
+  - Counter Display sticker.
+  - Compact counter badge.
+- Instant high-res PNG download and vector print support.
+
+### 7. Critical Notification System
+- In-app notification center for urgent alerts.
+- Automatic alert generation when a 1 or 2-star rating is received.
+- Severity levels (`critical`, `warning`, `info`) with one-click status updates.
+
+### 8. Interactive Demo Mode
+- Integrated demo workspace with realistic sample feedback for a specialty coffee roaster chain.
+- Enables instant evaluation of all features, filters, and reports without requiring initial customer scans.
+
+---
+
+## Technology Stack
+
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript (strict type checking)
+- **Styling**: Tailwind CSS (custom minimalist enterprise palette)
+- **Database & Auth**: Supabase (PostgreSQL, Row Level Security, Supabase Auth)
+- **Edge Backend**: Supabase Edge Functions (`signal-feedback`) with SHA-256 IP rate limiting
+- **Document Generation**: jsPDF (clean vector PDF reports) & QRCode
+- **Icons**: Lucide Icons (no emojis, professional typography)
+- **Deployment**: Vercel (Edge Network) & Cloudflare (DNS, SSL, security)
+
+---
+
+## Architecture & Security
+
+- **Row Level Security (RLS)**: Authenticated business owners can only view and manage their own businesses, locations, feedback, and notifications.
+- **Zero Client Secret Exposure**: Neither service-role keys nor administrative secrets are shipped to browser bundles.
+- **Anti-Spam & Rate Limiting**: The public feedback endpoint enforces per-IP sliding-window quotas with SHA-256 hashing to protect customer anonymity while defending against spam.
+- **Data Isolation**: Multi-tenant data isolation strictly enforced at the PostgreSQL database level.
+
+---
+
+## Local Development
 
 ```bash
-python -m http.server 3000
+# 1. Install dependencies
+npm install
+
+# 2. Start local development server
+npm run dev
+
+# 3. Open application
+http://localhost:3000
 ```
 
-Open `http://localhost:3000`. Add the local origin to the Edge Function's CORS allow-list if you use a different local host or port.
+### Build & Validate
 
-## Public feedback link
+```bash
+# Run Next.js production build and type checking
+npm run build
 
-Each business receives a unique slug. Its public form is available at:
-
+# Run frontend configuration checks
+npm run check
 ```
-https://<your-signal-domain>/?business=<business-slug>
-```
 
-## Data and privacy
+---
 
-- Business records are restricted to their authenticated owner through RLS.
-- Feedback reads are restricted to the owner of the related business.
-- Anonymous customers submit feedback through the Edge Function. Direct anonymous INSERT access to the feedback table is not granted.
-- The review invitation is never conditioned on rating or sentiment.
+## Database Migrations
 
-## Deployment
+Database migrations are located in `supabase/migrations/`:
+- `0001_initial_schema.sql`: Core businesses and feedback tables with initial RLS.
+- `20261113180919_optimize_rls_owner_indexes.sql`: Owner index and subquery performance optimizations.
+- `20261113185400_add_feedback_rate_limit.sql`: Rate limit tracking table.
+- `20261113185600_restrict_rate_limit_table.sql`: Security policy restricting client access.
+- `20261114200000_add_locations_and_features.sql`: Multi-location support, feedback statuses, team notes, and notification tables.
 
-The `main` branch is connected to the Vercel production project. GitHub Actions runs a lightweight syntax and configuration check on each push and pull request.
+To apply migrations to your Supabase project, execute the SQL files in the Supabase SQL Editor.
 
+---
 
-## Authentication URL configuration
+## Veqlo Ecosystem
 
-In Supabase Dashboard → Authentication → URL Configuration, set:
+Signal is an independent product developed by **[Veqlo](https://veqlo.me)**.
+- **Signal**: Customer feedback intelligence platform.
+- **Veqlo Quick**: Native Windows Explorer utility for rapid image conversion.
+- **OpenInbox**: Free, unlimited business email on Cloudflare Workers.
+- **Guardian**: Privacy and digital safety research.
 
-- Site URL: `https://signal.veqlo.me`
-- Redirect URL: `https://signal.veqlo.me/**`
-- Optional preview URL: `https://signal-two-blue.vercel.app/**`
+---
 
-The frontend passes its current origin as the email-confirmation redirect. Keep the production custom domain in the allow-list so email confirmation returns to Signal.
-
-
-Security follow-up: Supabase's security advisor currently reports that leaked-password protection is disabled. Enable it under Supabase Dashboard → Authentication → Password Security. The connected Supabase tools do not expose this Auth setting.
+© 2026 Veqlo. Built with intention.
