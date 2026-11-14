@@ -266,25 +266,32 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     status: FeedbackStatus,
     note?: string
   ): Promise<boolean> => {
-    setFeedback((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              status,
-              internal_notes: note !== undefined ? note : item.internal_notes,
-            }
-          : item
-      )
-    );
-
     try {
-      const clerkToken = await clerkSession?.getToken();
-      const supabase = getSupabaseClient(clerkToken);
-      const payload: Record<string, unknown> = { status };
-      if (note !== undefined) payload.internal_notes = note;
-      const { error } = await supabase.from("feedback").update(payload).eq("id", id);
-      if (error) throw error;
+      const response = await fetch("/api/feedback/update-status", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id,
+          status,
+          ...(note !== undefined ? { note } : {}),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Feedback update rejected (${response.status})`);
+      }
+
+      setFeedback((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                status,
+                internal_notes: note !== undefined ? note : item.internal_notes,
+              }
+            : item
+        )
+      );
       return true;
     } catch (err) {
       console.error("Failed to update feedback status:", err);
