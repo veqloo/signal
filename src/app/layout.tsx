@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { ClerkProvider } from "@clerk/nextjs";
 import { WorkspaceProvider } from "@/lib/workspace-context";
 
 export const viewport: Viewport = {
@@ -31,10 +32,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full bg-slate-50">
-      <body className="min-h-full flex flex-col text-slate-900 bg-slate-50 antialiased selection:bg-slate-900 selection:text-white">
-        <WorkspaceProvider>{children}</WorkspaceProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" className="h-full bg-slate-50">
+        <body className="min-h-full flex flex-col text-slate-900 bg-slate-50 antialiased selection:bg-slate-900 selection:text-white">
+          <WorkspaceProvider>{children}</WorkspaceProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

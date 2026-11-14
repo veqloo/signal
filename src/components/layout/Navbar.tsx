@@ -50,13 +50,13 @@ export function Navbar() {
             Dashboard
           </Link>
           <Link
-            href="/login"
+            href="/sign-in"
             className="text-xs font-medium text-slate-700 hover:text-slate-900 px-3 py-1.5 rounded-md hover:bg-slate-100 transition"
           >
             Sign in
           </Link>
           <Link
-            href="/signup"
+            href="/sign-up"
             className="text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 px-3.5 py-1.5 rounded-md transition shadow-sm inline-flex items-center gap-1.5"
           >
             Get started
@@ -67,7 +67,7 @@ export function Navbar() {
         {/* Mobile Menu Trigger */}
         <div className="flex md:hidden items-center gap-2">
           <Link
-            href="/login"
+            href="/sign-in"
             className="text-xs font-medium text-slate-700 hover:text-slate-900 px-2 py-1 rounded-md"
           >
             Sign in
@@ -132,7 +132,7 @@ export function Navbar() {
           </div>
           <div className="pt-3 border-t border-slate-100">
             <Link
-              href="/signup"
+              href="/sign-up"
               onClick={() => setMobileMenuOpen(false)}
               className="w-full inline-flex items-center justify-center gap-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 py-2.5 rounded-lg transition"
             >

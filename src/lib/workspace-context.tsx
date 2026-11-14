@@ -1,7 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useUser, useSession, useClerk } from "@clerk/nextjs";
 import {
   Business,
   BusinessLocation,
@@ -40,42 +41,44 @@ const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefin
 
 export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [user, setUser] = useState<any | null>(null);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const { isLoaded: isClerkLoaded, isSignedIn, user: clerkUser } = useUser();
+  const { session: clerkSession } = useSession();
+  const { signOut: clerkSignOut } = useClerk();
+
   const [business, setBusiness] = useState<Business | null>(null);
   const [locations, setLocations] = useState<BusinessLocation[]>([]);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [selectedDateRange, setDateRange] = useState<DateRange>("30d");
   const [selectedLocationId, setLocationFilter] = useState<string>("all");
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isDataLoading, setIsDataLoading] = useState<boolean>(true);
+
+  const userEmail = useMemo(() => {
+    return clerkUser?.primaryEmailAddress?.emailAddress ?? null;
+  }, [clerkUser]);
 
   const loadWorkspace = useCallback(async () => {
-    setIsLoading(true);
+    if (!isClerkLoaded) return;
+
+    if (!isSignedIn || !clerkUser) {
+      setBusiness(null);
+      setLocations([]);
+      setFeedback([]);
+      setNotifications([]);
+      setIsDataLoading(false);
+      return;
+    }
+
+    setIsDataLoading(true);
     try {
-      const supabase = getSupabaseClient();
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const clerkToken = await clerkSession?.getToken();
+      const supabase = getSupabaseClient(clerkToken);
 
-      if (sessionError || !session?.user) {
-        setUser(null);
-        setUserEmail(null);
-        setBusiness(null);
-        setLocations([]);
-        setFeedback([]);
-        setNotifications([]);
-        setIsLoading(false);
-        return;
-      }
-
-      const currentUser = session.user;
-      setUser(currentUser);
-      setUserEmail(currentUser.email ?? null);
-
-      // 1. Fetch user's business from Supabase
-      const { data: businesses, error: bizError } = await supabase
+      // 1. Fetch user's business from Supabase by Clerk ID
+      let { data: businesses, error: bizError } = await supabase
         .from("businesses")
         .select("*")
-        .eq("owner_id", currentUser.id)
+        .eq("owner_id", clerkUser.id)
         .order("created_at", { ascending: true })
         .limit(1);
 
@@ -84,18 +87,19 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       if (!bizError && businesses && businesses.length > 0) {
         currentBiz = businesses[0];
       } else {
-        // Fallback provision: If database trigger didn't run, create business for user
-        const bizName = currentUser.user_metadata?.business_name || "My Business";
-        const bizSlug =
-          currentUser.user_metadata?.business_slug ||
-          `${slugify(bizName)}-${currentUser.id.substring(0, 5)}`;
+        // Fallback: If no business exists yet for this Clerk user, check by user profile email
+        // to handle legacy accounts gracefully, or provision an initial business.
+        const bizName =
+          (clerkUser.publicMetadata?.business_name as string) ||
+          `${clerkUser.firstName ? `${clerkUser.firstName}'s` : "My"} Business`;
+        const bizSlug = `${slugify(bizName)}-${clerkUser.id.substring(clerkUser.id.length - 4)}`;
         const bizCategory =
-          currentUser.user_metadata?.business_category || "Café & Restaurant";
+          (clerkUser.publicMetadata?.business_category as string) || "Café & Restaurant";
 
         const { data: createdBiz, error: createBizErr } = await supabase
           .from("businesses")
           .insert({
-            owner_id: currentUser.id,
+            owner_id: clerkUser.id,
             name: bizName,
             slug: bizSlug,
             category: bizCategory,
@@ -106,6 +110,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
         if (!createBizErr && createdBiz) {
           currentBiz = createdBiz;
+        } else if (createBizErr) {
+          console.warn("[Workspace] Business insert notice:", createBizErr.message);
         }
       }
 
@@ -185,34 +191,12 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.error("Workspace initialization error:", err);
     } finally {
-      setIsLoading(false);
+      setIsDataLoading(false);
     }
-  }, []);
+  }, [isClerkLoaded, isSignedIn, clerkUser, clerkSession]);
 
   useEffect(() => {
     loadWorkspace();
-
-    // Listen to Supabase auth state changes
-    const supabase = getSupabaseClient();
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        loadWorkspace();
-      } else if (event === "SIGNED_OUT") {
-        setUser(null);
-        setUserEmail(null);
-        setBusiness(null);
-        setLocations([]);
-        setFeedback([]);
-        setNotifications([]);
-        setIsLoading(false);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, [loadWorkspace]);
 
   const updateBusiness = async (updates: Partial<Business>): Promise<boolean> => {
@@ -221,7 +205,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     setBusiness(updated);
 
     try {
-      const supabase = getSupabaseClient();
+      const clerkToken = await clerkSession?.getToken();
+      const supabase = getSupabaseClient(clerkToken);
       const { error } = await supabase
         .from("businesses")
         .update(updates)
@@ -239,7 +224,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     const slug = slugify(name);
 
     try {
-      const supabase = getSupabaseClient();
+      const clerkToken = await clerkSession?.getToken();
+      const supabase = getSupabaseClient(clerkToken);
       const { data, error } = await supabase
         .from("locations")
         .insert({
@@ -264,7 +250,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const deleteLocation = async (id: string): Promise<boolean> => {
     setLocations((prev) => prev.filter((l) => l.id !== id));
     try {
-      const supabase = getSupabaseClient();
+      const clerkToken = await clerkSession?.getToken();
+      const supabase = getSupabaseClient(clerkToken);
       const { error } = await supabase.from("locations").delete().eq("id", id);
       if (error) throw error;
       return true;
@@ -292,7 +279,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     );
 
     try {
-      const supabase = getSupabaseClient();
+      const clerkToken = await clerkSession?.getToken();
+      const supabase = getSupabaseClient(clerkToken);
       const payload: Record<string, unknown> = { status };
       if (note !== undefined) payload.internal_notes = note;
       const { error } = await supabase.from("feedback").update(payload).eq("id", id);
@@ -309,7 +297,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
     );
     try {
-      const supabase = getSupabaseClient();
+      const clerkToken = await clerkSession?.getToken();
+      const supabase = getSupabaseClient(clerkToken);
       await supabase.from("notifications").update({ is_read: true }).eq("id", id);
     } catch (err) {
       console.error(err);
@@ -320,7 +309,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     if (!business) return;
     try {
-      const supabase = getSupabaseClient();
+      const clerkToken = await clerkSession?.getToken();
+      const supabase = getSupabaseClient(clerkToken);
       await supabase
         .from("notifications")
         .update({ is_read: true })
@@ -332,28 +322,25 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      const supabase = getSupabaseClient();
-      await supabase.auth.signOut();
+      await clerkSignOut();
     } catch (err) {
       console.error("SignOut error:", err);
     } finally {
-      setUser(null);
-      setUserEmail(null);
       setBusiness(null);
       setLocations([]);
       setFeedback([]);
       setNotifications([]);
-      // Clean reload to login to clear any server/cookie state
-      window.location.href = "/login";
+      router.push("/login");
     }
   };
 
   const unreadNotificationsCount = notifications.filter((n) => !n.is_read).length;
+  const isLoading = !isClerkLoaded || isDataLoading;
 
   return (
     <WorkspaceContext.Provider
       value={{
-        user,
+        user: clerkUser,
         userEmail,
         business,
         locations,
