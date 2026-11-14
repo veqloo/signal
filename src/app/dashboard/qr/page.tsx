@@ -2,11 +2,15 @@
 
 import { useState, useEffect, useRef } from "react";
 import QRCode from "qrcode";
+import { useAuth } from "@clerk/nextjs";
+import Link from "next/link";
 import { useWorkspace } from "@/lib/workspace-context";
 import { Header } from "@/components/dashboard/Header";
 import { Download, Printer, Copy, Check, QrCode as QrIcon, Sparkles } from "lucide-react";
 
 export default function QRStudioPage() {
+  const { has } = useAuth();
+  const canPrint = has({ feature: "print_ready_qr" });
   const { business, locations } = useWorkspace();
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
@@ -56,6 +60,7 @@ export default function QRStudioPage() {
   };
 
   const handlePrint = () => {
+    if (!canPrint) return;
     window.print();
   };
 
@@ -69,13 +74,23 @@ export default function QRStudioPage() {
           subtitle="Generate high-resolution QR codes and ready-to-print table stands"
           actions={
             <div className="flex items-center gap-2">
-              <button
-                onClick={handlePrint}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-md transition shadow-sm"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                <span>Print Stand</span>
-              </button>
+              {canPrint ? (
+                <button
+                  onClick={handlePrint}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-md transition shadow-sm"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Print Stand</span>
+                </button>
+              ) : (
+                <Link
+                  href="/pricing/subscribe"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-md transition"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Unlock print templates</span>
+                </Link>
+              )}
               <button
                 onClick={handleDownload}
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-md transition shadow-sm"
@@ -108,36 +123,47 @@ export default function QRStudioPage() {
             </select>
           </div>
 
-          {/* Template format */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-700">Display Template:</span>
-            <div className="inline-flex rounded-md border border-slate-200 bg-slate-50 p-0.5 text-xs">
-              <button
-                onClick={() => setTemplate("tent")}
-                className={`px-3 py-1 rounded font-medium transition ${
-                  template === "tent" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
-                }`}
-              >
-                Table Tent Stand
-              </button>
-              <button
-                onClick={() => setTemplate("counter")}
-                className={`px-3 py-1 rounded font-medium transition ${
-                  template === "counter" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
-                }`}
-              >
-                Counter Card
-              </button>
-              <button
-                onClick={() => setTemplate("badge")}
-                className={`px-3 py-1 rounded font-medium transition ${
-                  template === "badge" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
-                }`}
-              >
-                Compact Sticker
-              </button>
+          {canPrint ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-slate-700">Display Template:</span>
+              <div className="inline-flex rounded-md border border-slate-200 bg-slate-50 p-0.5 text-xs">
+                <button
+                  onClick={() => setTemplate("tent")}
+                  className={`px-3 py-1 rounded font-medium transition ${
+                    template === "tent" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
+                  }`}
+                >
+                  Table Tent Stand
+                </button>
+                <button
+                  onClick={() => setTemplate("counter")}
+                  className={`px-3 py-1 rounded font-medium transition ${
+                    template === "counter" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
+                  }`}
+                >
+                  Counter Card
+                </button>
+                <button
+                  onClick={() => setTemplate("badge")}
+                  className={`px-3 py-1 rounded font-medium transition ${
+                    template === "badge" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"
+                  }`}
+                >
+                  Compact Sticker
+                </button>
+              </div>
             </div>
-          </div>
+  
+          ) : (
+            <div className="flex items-center gap-3 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3">
+              <Sparkles className="h-4 w-4 shrink-0 text-blue-600" />
+              <div>
+                <p className="text-xs font-semibold text-slate-900">Print-ready templates are included with Pro.</p>
+                <p className="text-[11px] text-slate-600">Your standard QR code and PNG download remain available on Starter.</p>
+              </div>
+              <Link href="/pricing/subscribe" className="ml-auto shrink-0 text-xs font-semibold text-blue-700 underline underline-offset-4">View Pro</Link>
+            </div>
+          )}
         </div>
 
         {/* Public Link Box */}
@@ -167,6 +193,7 @@ export default function QRStudioPage() {
         </div>
 
         {/* Printable Stand Preview Area */}
+        {canPrint ? (
         <div className="flex justify-center">
           {/* Table Tent Format */}
           {template === "tent" && (
@@ -260,6 +287,19 @@ export default function QRStudioPage() {
             </div>
           )}
         </div>
+        ) : (
+          <div className="flex justify-center">
+            <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+              <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-slate-500">Your standard feedback QR</p>
+              {qrDataUrl ? (
+                <img src={qrDataUrl} alt="Signal feedback QR code" className="mx-auto h-48 w-48" />
+              ) : (
+                <div className="mx-auto h-48 w-48 animate-pulse rounded bg-slate-100" />
+              )}
+              <p className="mt-4 text-xs text-slate-500">Download the PNG or copy the public feedback link.</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
