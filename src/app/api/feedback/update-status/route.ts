@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-const ALLOWED_STATUSES = new Set(["new", "flagged", "resolved", "read"]);
+const ALLOWED_STATUSES = new Set(["new", "flagged", "resolved", "read", "archived"]);
 
 export async function PATCH(req: Request) {
   const { userId, has, getToken } = await auth();
