@@ -10,40 +10,31 @@ Signal uses **Clerk Billing for B2C subscriptions**: each business owner subscri
 
 Clerk Billing must be enabled in the selected Clerk application before the PricingTable can show purchasable plans. Plan definitions and prices are configured in Clerk Dashboard; they are not created by the React component or synchronized from Stripe.
 
-## Create these user plans in Clerk Dashboard
+## Configure these user plans in Clerk Dashboard
 
-Use the following plan slugs because application authorization checks should refer to stable slugs/features, not display names.
+Clerk creates a default free Plan when Billing is enabled and automatically assigns it to every new user. Existing users receive a default Subscription when Billing is enabled. Rename that default plan to **Starter**, set its slug to `starter`, and make it publicly available. Then create the two paid user plans below.
 
-| Plan | Slug | Monthly price | Annual monthly equivalent | Public |
+| Plan | Slug | Monthly price | Annual total | Public |
 |---|---|---:|---:|---|
-| Starter | `starter` | Free | Free | Yes |
-| Pro | `pro` | $29 | $24 ($288/year) | Yes |
-| Enterprise | `enterprise` | $79 | $69 ($828/year) | Yes |
+| Starter | `starter` (default free plan) | Free | Free | Yes |
+| Pro | `pro` | $29 | $288/year ($24/mo equivalent) | Yes |
+| Enterprise | `enterprise` | $79 | $828/year ($69/mo equivalent) | Yes |
 
-The amounts match the current Signal pricing page. Confirm currency, tax handling, trial length, and annual totals in Clerk before enabling live payments. The existing marketing page does not promise a trial until one is configured in Clerk.
+These prices match the current Signal pricing page. Confirm the currency, payment intervals, tax handling, and trial settings in Clerk before enabling live payments. The marketing page does not promise a free trial until one is configured.
 
 ## Feature slugs
 
-Create these Features in Clerk and attach them to the plans:
+Create only the Features that the current application actually gates:
 
 | Feature slug | Starter | Pro | Enterprise |
 |---|:---:|:---:|:---:|
-| `standard_qr` | Yes | Yes | Yes |
-| `basic_analytics` | Yes | Yes | Yes |
-| `csv_export` | Yes | Yes | Yes |
-| `unlimited_feedback` | — | Yes | Yes |
 | `print_ready_qr` | — | Yes | Yes |
-| `advanced_analytics` | — | Yes | Yes |
 | `feedback_triage` | — | Yes | Yes |
-| `email_alerts` | — | Yes | Yes |
-| `multi_location_3` | — | Yes | Yes |
-| `unlimited_locations` | — | — | Yes |
+| `advanced_analytics` | — | Yes | Yes |
 | `executive_reports` | — | — | Yes |
 | `branch_benchmarking` | — | — | Yes |
-| `team_access` | — | — | Yes |
-| `custom_feedback_domain` | — | — | Yes |
 
-The current app must still enforce quantitative limits (for example, 100 feedback submissions/month and location counts) in trusted server/database code. Hiding a button or rendering a different menu is not an authorization boundary. Add server-side `has({ feature: "..." })` checks and quota enforcement before treating these features as production-enforced.
+Do not create or advertise response-volume, location-count, email-alert, team-access, or custom-feedback-domain entitlements yet. Those capabilities are not fully enforced/implemented in the current app. Clerk Billing does not provide metered usage billing, so response quotas need their own trusted server/database enforcement before they can be sold.
 
 ## Enable and test
 
