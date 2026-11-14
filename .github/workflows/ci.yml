@@ -1,4 +1,6 @@
 name: Signal CI
+permissions:
+  contents: write
 on:
   push:
     branches: [main]
@@ -24,10 +26,13 @@ jobs:
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_c2lnbmFsLmNsZXJrLmFjY291bnRzLmRldiQ
           NEXT_PUBLIC_APP_URL: https://signal.veqlo.me
         run: npm run build
-      - name: Upload generated lockfile
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: signal-package-lock
-          path: package-lock.json
-          retention-days: 7
+      - name: Commit regenerated package lock
+        if: success()
+        run: |
+          if ! git diff --quiet -- package-lock.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package-lock.json
+            git commit -m "chore(lockfile): sync upgraded dependencies"
+            git push origin HEAD:"${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+          fi
