@@ -136,7 +136,7 @@ export function Footer() {
         </div>
 
         <div className="pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div>© {new Date().getFullYear()} Veqlo. All rights reserved.</div>
+          <div>&copy; {new Date().getFullYear()} Veqlo. All rights reserved.</div>
           <div className="flex flex-wrap items-center gap-4 sm:gap-6">
             <span>No tracking cookies on feedback forms</span>
             <span>Unbiased Google Review invitations</span>

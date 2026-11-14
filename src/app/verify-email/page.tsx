@@ -1,130 +1,176 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase/client";
-import { Mail, CheckCircle2, AlertCircle, ArrowRight, RefreshCw, ArrowLeft } from "lucide-react";
+import {
+  Mail,
+  ArrowRight,
+  RotateCcw,
+  CheckCircle2,
+  AlertCircle,
+  ShieldCheck,
+  Building2,
+  ExternalLink,
+} from "lucide-react";
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "";
+  const emailParam = searchParams.get("email") || "";
   const errorParam = searchParams.get("error");
+  const resentParam = searchParams.get("resent") === "true";
 
+  const [email, setEmail] = useState(emailParam);
   const [isResending, setIsResending] = useState(false);
-  const [resendNotice, setResendNotice] = useState<string | null>(null);
-  const [errorNotice, setErrorNotice] = useState<string | null>(
-    errorParam === "invalid_or_expired_code"
-      ? "The confirmation link has expired or was already used. Please request a new one."
-      : null
+  const [resendStatus, setResendStatus] = useState<"idle" | "success" | "error">(
+    resentParam ? "success" : "idle"
   );
+  const [countdown, setCountdown] = useState(0);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (countdown > 0) {
+      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [countdown]);
 
   const handleResend = async () => {
-    if (!email) {
-      setErrorNotice("Please enter your email on the login page to resend confirmation.");
-      return;
-    }
+    if (!email || countdown > 0) return;
     setIsResending(true);
-    setErrorNotice(null);
-    setResendNotice(null);
+    setResendStatus("idle");
 
     try {
       const supabase = getSupabaseClient();
-      const origin = typeof window !== "undefined" ? window.location.origin : "https://signal.veqlo.me";
+      const origin =
+        typeof window !== "undefined"
+          ? window.location.origin
+          : "https://signal.veqlo.me";
+
       const { error } = await supabase.auth.resend({
         type: "signup",
-        email,
+        email: email.trim(),
         options: {
           emailRedirectTo: `${origin}/auth/callback`,
         },
       });
 
       if (error) throw error;
-      setResendNotice("A new confirmation email has been dispatched. Please check your inbox.");
+      setResendStatus("success");
+      setCountdown(60);
     } catch (err: any) {
-      setErrorNotice(err.message || "Could not resend confirmation email. Please try again shortly.");
+      setResendStatus("error");
     } finally {
       setIsResending(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <Link href="/" className="inline-flex items-center gap-2 mb-4">
-          <span className="font-bold text-2xl tracking-tight text-slate-900">
+    <div className="w-full max-w-md space-y-6">
+      {/* Brand */}
+      <div className="text-center space-y-2">
+        <Link href="/" className="inline-flex items-center gap-2 group">
+          <span className="font-semibold text-2xl tracking-tight text-zinc-900">
             signal<span className="text-blue-600">.</span>
           </span>
-          <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border border-slate-200 text-slate-500 bg-white font-medium">
+          <span className="text-[10px] font-mono tracking-wider uppercase px-2 py-0.5 rounded border border-zinc-200 text-zinc-500 bg-zinc-50">
             by Veqlo
           </span>
         </Link>
-        <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+        <h1 className="text-xl font-bold tracking-tight text-zinc-900">
           Confirm your email address
-        </h2>
-        <p className="mt-1.5 text-xs text-slate-500">
-          Verify your identity to activate your workspace and begin collecting customer feedback.
+        </h1>
+        <p className="text-xs text-zinc-500">
+          We dispatched a secure activation link to protect your account.
         </p>
       </div>
 
-      <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-6 sm:px-10 border border-slate-200 shadow-sm rounded-xl space-y-6 text-center">
+      {/* Main Container Card */}
+      <div className="bg-white border border-zinc-200 rounded-xl p-6 sm:p-8 shadow-sm space-y-5">
+        {errorParam === "invalid_or_expired_code" && (
+          <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-semibold">Link expired or invalid.</span>
+              <p className="mt-0.5 text-[11px] text-amber-700">
+                Please request a fresh confirmation link using the button below.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="text-center py-2 space-y-3">
           <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto border border-blue-100">
             <Mail className="w-6 h-6" />
           </div>
 
-          <div className="space-y-2">
-            <p className="text-xs text-slate-600 leading-relaxed">
-              We sent a verification link to:
+          <div className="space-y-1">
+            <p className="text-xs text-zinc-600">
+              Activation email sent to:
             </p>
-            <div className="text-sm font-semibold text-slate-900 bg-slate-50 py-2 px-3 rounded border border-slate-200 inline-block">
-              {email || "your registered email"}
-            </div>
-            <p className="text-[11px] text-slate-400">
-              Sender: <span className="font-mono text-slate-600">no-reply@veqlo.me</span>
+            <p className="text-sm font-semibold text-zinc-900 font-mono break-all px-3 py-1 bg-zinc-50 rounded border border-zinc-100 inline-block">
+              {email || "your email address"}
             </p>
           </div>
+        </div>
 
-          {errorNotice && (
-            <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-lg text-xs flex items-center gap-2 text-left">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span>{errorNotice}</span>
+        {/* Sender details badge */}
+        <div className="p-3.5 rounded-lg bg-zinc-50 border border-zinc-200 space-y-1.5 text-xs text-zinc-600">
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="font-medium text-zinc-700">Expected Sender:</span>
+            <span className="font-mono font-semibold text-zinc-900">Signal by Veqlo</span>
+          </div>
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="font-medium text-zinc-700">Sender Address:</span>
+            <span className="font-mono text-blue-600 font-medium">no-reply@veqlo.me</span>
+          </div>
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="font-medium text-zinc-700">Subject:</span>
+            <span className="text-zinc-800">Confirm your Signal account</span>
+          </div>
+        </div>
+
+        {/* Resend actions */}
+        <div className="pt-2 space-y-3">
+          {resendStatus === "success" && (
+            <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Fresh verification link dispatched to your inbox.</span>
             </div>
           )}
 
-          {resendNotice && (
-            <div className="p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs flex items-center gap-2 text-left">
-              <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-              <span>{resendNotice}</span>
+          {resendStatus === "error" && (
+            <div className="p-2.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+              <span>Could not resend email. Please verify the address and try again.</span>
             </div>
           )}
 
-          <div className="pt-2 border-t border-slate-100 space-y-3">
-            <p className="text-[11px] text-slate-500">
-              Did not receive the email? Check your spam/junk folder or request another link below.
-            </p>
-            {email && (
-              <button
-                type="button"
-                onClick={handleResend}
-                disabled={isResending}
-                className="w-full py-2 px-3 rounded-md text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition flex items-center justify-center gap-1.5 disabled:opacity-50"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isResending ? "animate-spin" : ""}`} />
-                <span>{isResending ? "Resending..." : "Resend confirmation email"}</span>
-              </button>
-            )}
-          </div>
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={isResending || countdown > 0 || !email}
+            className="w-full inline-flex items-center justify-center gap-2 text-xs font-semibold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 disabled:opacity-50 py-2.5 rounded-lg transition"
+          >
+            <RotateCcw className={`w-3.5 h-3.5 ${isResending ? "animate-spin" : ""}`} />
+            <span>
+              {countdown > 0
+                ? `Resend available in ${countdown}s`
+                : isResending
+                ? "Sending link..."
+                : "Resend confirmation email"}
+            </span>
+          </button>
+        </div>
 
-          <div className="pt-2">
-            <Link
-              href="/login"
-              className="text-xs text-blue-600 hover:underline font-semibold inline-flex items-center gap-1"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to sign in</span>
-            </Link>
-          </div>
+        <div className="pt-3 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-500">
+          <Link href="/login" className="hover:text-zinc-900 transition">
+            &larr; Back to sign in
+          </Link>
+          <Link href="/signup" className="hover:text-zinc-900 transition">
+            Change email
+          </Link>
         </div>
       </div>
     </div>
@@ -133,8 +179,10 @@ function VerifyEmailContent() {
 
 export default function VerifyEmailPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center text-xs text-slate-400">Loading...</div>}>
-      <VerifyEmailContent />
-    </Suspense>
+    <div className="min-h-screen bg-zinc-50 flex flex-col justify-center items-center p-4">
+      <Suspense fallback={<div className="text-xs text-zinc-400">Loading...</div>}>
+        <VerifyEmailContent />
+      </Suspense>
+    </div>
   );
 }

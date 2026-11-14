@@ -30,30 +30,41 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Refresh auth token
+  // Authenticate user via Supabase server-side session token
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
 
-  // Protect /dashboard and /onboarding
+  // Protected application routes
   const isProtectedRoute = path.startsWith("/dashboard") || path.startsWith("/onboarding");
-  const isAuthRoute = path === "/login" || path === "/signup" || path === "/forgot-password";
+  const isAuthRoute =
+    path === "/login" ||
+    path === "/signup" ||
+    path === "/forgot-password";
 
-  // Allow demo access cookie or query param
-  const hasDemoCookie = request.cookies.get("signal_demo_mode")?.value === "1";
-  const hasDemoQuery = request.nextUrl.searchParams.get("demo") === "1";
-
-  if (isProtectedRoute && !user && !hasDemoCookie && !hasDemoQuery) {
+  // Unauthenticated access to protected routes -> redirect to /login
+  if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", path);
     return NextResponse.redirect(url);
   }
 
-  // Redirect logged-in users away from auth pages
-  if (isAuthRoute && user) {
+  // If email verification is enabled and user has not confirmed their email
+  // Prevent unconfirmed users from accessing the private dashboard
+  if (isProtectedRoute && user && !user.email_confirmed_at && user.confirmed_at === undefined) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/verify-email";
+    if (user.email) {
+      url.searchParams.set("email", user.email);
+    }
+    return NextResponse.redirect(url);
+  }
+
+  // Authenticated & verified users accessing login/signup -> redirect to /dashboard
+  if (isAuthRoute && user && (user.email_confirmed_at || user.confirmed_at !== undefined)) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);

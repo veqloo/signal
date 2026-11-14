@@ -22,10 +22,16 @@ create policy "Users can update their own profile"
   using (id = (select auth.uid()))
   with check (id = (select auth.uid()));
 
--- Automatically create profile on auth signup
+-- Automatically create profile, business and location on auth signup
 create or replace function public.handle_new_user()
 returns trigger as $$
+declare
+  v_biz_name text;
+  v_biz_slug text;
+  v_biz_cat text;
+  v_biz_id uuid;
 begin
+  -- 1. Create user profile
   insert into public.profiles (id, email, full_name, avatar_url)
   values (
     new.id,
@@ -34,6 +40,28 @@ begin
     coalesce(new.raw_user_meta_data->>'avatar_url', '')
   )
   on conflict (id) do nothing;
+
+  -- 2. Create initial business if metadata provided
+  v_biz_name := coalesce(new.raw_user_meta_data->>'business_name', 'My Business');
+  v_biz_slug := coalesce(new.raw_user_meta_data->>'business_slug', lower(regexp_replace(v_biz_name, '[^a-zA-Z0-9]+', '-', 'g')) || '-' || substring(new.id::text, 1, 4));
+  v_biz_cat := coalesce(new.raw_user_meta_data->>'business_category', 'Café & Restaurant');
+
+  insert into public.businesses (owner_id, name, slug, category, onboarding_completed)
+  values (new.id, v_biz_name, v_biz_slug, v_biz_cat, false)
+  returning id into v_biz_id;
+
+  -- 3. Create initial main location
+  if v_biz_id is not null then
+    insert into public.locations (business_id, name, slug, is_active)
+    values (v_biz_id, 'Main Location', 'main', true)
+    on conflict do nothing;
+
+    -- 4. Create business membership for owner
+    insert into public.business_memberships (business_id, user_id, role)
+    values (v_biz_id, new.id, 'owner')
+    on conflict do nothing;
+  end if;
+
   return new;
 end;
 $$ language plpgsql security definer;

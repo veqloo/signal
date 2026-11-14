@@ -2,20 +2,27 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase/client";
-import { ArrowRight, Lock, Mail, AlertCircle, Sparkles } from "lucide-react";
+import { ArrowRight, Lock, Mail, AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Suspense } from "react";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextUrl = searchParams.get("next") || "/dashboard";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
+    setNeedsVerification(false);
     setIsLoading(true);
 
     try {
@@ -25,9 +32,29 @@ export default function LoginPage() {
         password,
       });
 
-      if (error) throw error;
-      if (data.session) {
-        router.push("/dashboard");
+      if (error) {
+        // Check for unconfirmed email error
+        if (
+          error.message.toLowerCase().includes("email not confirmed") ||
+          error.message.toLowerCase().includes("verify your email")
+        ) {
+          setNeedsVerification(true);
+          throw new Error("Your email address has not been verified yet.");
+        }
+        throw error;
+      }
+
+      if (data?.user) {
+        // Enforce verified email
+        if (!data.user.email_confirmed_at && data.user.confirmed_at === undefined) {
+          setNeedsVerification(true);
+          router.push(`/verify-email?email=${encodeURIComponent(email.trim())}`);
+          return;
+        }
+
+        // Navigate to dashboard or next url
+        router.push(nextUrl);
+        router.refresh();
       }
     } catch (err: any) {
       setErrorMsg(err.message || "Invalid email or password.");
@@ -36,113 +63,153 @@ export default function LoginPage() {
     }
   };
 
-  const handleDemoAccess = () => {
-    router.push("/dashboard");
+  const handleResendVerification = async () => {
+    if (!email) return;
+    try {
+      const supabase = getSupabaseClient();
+      await supabase.auth.resend({
+        type: "signup",
+        email: email.trim(),
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      router.push(`/verify-email?email=${encodeURIComponent(email.trim())}&resent=true`);
+    } catch (err: any) {
+      setErrorMsg(err.message || "Failed to resend verification email.");
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <Link href="/" className="inline-flex items-center gap-2 mb-4">
-          <span className="font-bold text-2xl tracking-tight text-slate-900">
+    <div className="w-full max-w-sm space-y-6">
+      {/* Brand Header */}
+      <div className="text-center space-y-2">
+        <Link href="/" className="inline-flex items-center gap-2 group">
+          <span className="font-semibold text-2xl tracking-tight text-zinc-900">
             signal<span className="text-blue-600">.</span>
           </span>
-          <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border border-slate-200 text-slate-500 bg-white font-medium">
+          <span className="text-[10px] font-mono tracking-wider uppercase px-2 py-0.5 rounded border border-zinc-200 text-zinc-500 bg-zinc-50">
             by Veqlo
           </span>
         </Link>
-        <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-          Welcome back
-        </h2>
-        <p className="mt-1.5 text-xs text-slate-500">
-          Sign in to access your business feedback intelligence.
+        <h1 className="text-xl font-bold tracking-tight text-zinc-900">
+          Sign in to your account
+        </h1>
+        <p className="text-xs text-zinc-500">
+          Access customer sentiment telemetry and multi-branch management.
         </p>
       </div>
 
-      <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-6 sm:px-10 border border-slate-200 shadow-sm rounded-xl space-y-6">
-          {errorMsg && (
-            <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span>{errorMsg}</span>
+      {/* Main Card */}
+      <div className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm space-y-5">
+        {errorMsg && (
+          <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+              <span className="font-medium">{errorMsg}</span>
             </div>
-          )}
+            {needsVerification && (
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                className="text-left text-xs text-red-800 underline font-semibold hover:text-red-950 ml-6"
+              >
+                Click here to resend verification email →
+              </button>
+            )}
+          </div>
+        )}
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
-                Email address
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-zinc-700">
+              Work Email
+            </label>
+            <div className="relative">
+              <Mail className="w-4 h-4 text-zinc-400 absolute left-3 top-2.5" />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@business.com"
+                className="w-full text-xs rounded-lg border border-zinc-200 pl-9 pr-3 py-2 text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-zinc-700">
+                Password
               </label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                <input
-                  type="email"
-                  required
-                  autoComplete="email"
-                  placeholder="you@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-slate-900"
-                />
-              </div>
+              <Link
+                href="/forgot-password"
+                className="text-[11px] font-medium text-zinc-500 hover:text-zinc-900 transition"
+              >
+                Forgot password?
+              </Link>
             </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-semibold text-slate-700">
-                  Password
-                </label>
-                <Link
-                  href="/forgot-password"
-                  className="text-[11px] text-blue-600 hover:underline"
-                >
-                  Forgot?
-                </Link>
-              </div>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                <input
-                  type="password"
-                  required
-                  autoComplete="current-password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-md focus:outline-none focus:ring-1 focus:ring-slate-900"
-                />
-              </div>
+            <div className="relative">
+              <Lock className="w-4 h-4 text-zinc-400 absolute left-3 top-2.5" />
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full text-xs rounded-lg border border-zinc-200 pl-9 pr-9 py-2 text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition font-mono"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-2.5 text-zinc-400 hover:text-zinc-600"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-2.5 px-4 rounded-md text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 transition shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              <span>{isLoading ? "Signing in..." : "Sign in"}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </form>
-
-          {/* Quick Demo Access Button */}
-          <div className="pt-4 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={handleDemoAccess}
-              className="w-full py-2 px-3 rounded-md text-xs font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition flex items-center justify-center gap-1.5"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>Explore Demo Workspace (Instant Preview)</span>
-            </button>
           </div>
 
-          <div className="text-center text-xs text-slate-500">
-            Don't have an account yet?{" "}
-            <Link href="/signup" className="font-semibold text-blue-600 hover:underline">
-              Create an account
-            </Link>
-          </div>
-        </div>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full inline-flex items-center justify-center gap-2 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 disabled:bg-zinc-300 py-2.5 rounded-lg transition shadow-sm"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Signing in...</span>
+              </>
+            ) : (
+              <>
+                <span>Sign in</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </>
+            )}
+          </button>
+        </form>
       </div>
+
+      {/* Footer Register Prompt */}
+      <div className="text-center text-xs text-zinc-500">
+        Don&apos;t have a Signal account?{" "}
+        <Link
+          href="/signup"
+          className="font-semibold text-zinc-900 hover:underline inline-flex items-center gap-0.5"
+        >
+          Create an account
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <div className="min-h-screen bg-zinc-50 flex flex-col justify-center items-center p-4">
+      <Suspense fallback={<div className="text-xs text-zinc-400">Loading...</div>}>
+        <LoginForm />
+      </Suspense>
     </div>
   );
 }

@@ -302,7 +302,7 @@ function HomePageContent() {
                     {demoSubmitted && (
                       <div className="p-3 rounded-lg bg-blue-50/60 border border-blue-200 text-xs flex items-center justify-between animate-in fade-in duration-300">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-slate-900">{demoRating}★</span>
+                          <span className="font-bold text-slate-900 font-mono">{demoRating} / 5</span>
                           <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">
                             {demoCategory}
                           </span>
@@ -313,21 +313,21 @@ function HomePageContent() {
                     )}
                     <div className="p-3 rounded-lg bg-slate-50 border border-slate-100 text-xs flex items-center justify-between text-slate-600">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-slate-900">5★</span>
+                        <span className="font-bold text-slate-900 font-mono">5.0 / 5</span>
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">
                           Service
                         </span>
-                        <span>"Elena was super helpful at the register."</span>
+                        <span>&ldquo;Elena was super helpful at the register.&rdquo;</span>
                       </div>
                       <span className="text-[10px] text-slate-400">12m ago</span>
                     </div>
                     <div className="p-3 rounded-lg bg-slate-50 border border-slate-100 text-xs flex items-center justify-between text-slate-600">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-slate-900">5★</span>
+                        <span className="font-bold text-slate-900 font-mono">5.0 / 5</span>
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-700">
                           Quality
                         </span>
-                        <span>"Best flat white in town."</span>
+                        <span>&ldquo;Best flat white in town.&rdquo;</span>
                       </div>
                       <span className="text-[10px] text-slate-400">42m ago</span>
                     </div>

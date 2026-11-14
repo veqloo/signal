@@ -184,8 +184,8 @@ export default function FeedbackInboxPage() {
               className="text-xs font-medium border border-slate-200 rounded-md px-3 py-1.5 bg-white text-slate-700 focus:outline-none"
             >
               <option value="all">All Ratings</option>
-              <option value="positive">Positive (4-5★)</option>
-              <option value="low">Needs Attention (1-2★)</option>
+              <option value="positive">Positive (4-5 stars)</option>
+              <option value="low">Needs Attention (1-2 stars)</option>
               <option value="5">5 Stars only</option>
               <option value="4">4 Stars only</option>
               <option value="3">3 Stars only</option>
@@ -249,8 +249,8 @@ export default function FeedbackInboxPage() {
                   </p>
                   <div className="pt-2 flex items-center justify-center gap-3">
                     <Link
-                      href="/dashboard/qr"
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-900 bg-slate-100 hover:bg-slate-200 px-3.5 py-1.5 rounded-md transition"
+                      href="/dashboard/qr-codes"
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-900 bg-zinc-100 hover:bg-zinc-200 px-3.5 py-1.5 rounded-md transition"
                     >
                       <span>Open QR Studio</span>
                       <ArrowRight className="w-3.5 h-3.5" />

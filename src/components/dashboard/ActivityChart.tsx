@@ -25,7 +25,7 @@ export function ActivityChart({ days }: { days: ActivityDay[] }) {
         {hoveredDay && (
           <div className="text-xs bg-slate-900 text-white px-2 py-0.5 rounded shadow-sm">
             {hoveredDay.label}: <span className="font-semibold">{hoveredDay.count} responses</span>
-            {hoveredDay.count > 0 && ` (avg ${hoveredDay.avgRating}★)`}
+            {hoveredDay.count > 0 && ` (avg ${hoveredDay.avgRating} / 5)`}
           </div>
         )}
       </div>

@@ -62,13 +62,17 @@ export default function OnboardingPage() {
 
     try {
       // 1. Update business details
-      await updateBusiness({
+      const ok = await updateBusiness({
         name: businessName.trim(),
         category,
         welcome_message: welcomeMessage.trim() || null,
         google_review_url: googleReviewUrl.trim() || null,
         onboarding_completed: true,
       });
+
+      if (!ok) {
+        throw new Error("Could not update business profile. Please check your connection.");
+      }
 
       // 2. Add initial location if provided
       if (locationName.trim()) {

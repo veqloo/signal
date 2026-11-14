@@ -11,12 +11,13 @@ export async function GET(request: Request) {
     const supabase = createClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (!error && data.user) {
-      // If recovery link, redirect directly to reset-password
-      if (type === "recovery") {
+    if (!error && data?.user) {
+      // 1. Password recovery flow
+      if (type === "recovery" || next.includes("reset-password")) {
         return NextResponse.redirect(new URL("/reset-password", request.url));
       }
 
+      // 2. Email verification / signup flow
       // Check if user has an existing business with onboarding completed
       const { data: businesses } = await supabase
         .from("businesses")
@@ -32,7 +33,7 @@ export async function GET(request: Request) {
     }
   }
 
-  // If error or code invalid, redirect to verify-email with error notice
+  // If token is invalid or expired, redirect with error context
   return NextResponse.redirect(
     new URL("/verify-email?error=invalid_or_expired_code", request.url)
   );

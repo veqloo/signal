@@ -112,7 +112,7 @@ export default function LocationsPage() {
                       </div>
                       <div>
                         <span className="text-slate-400 block text-[10px]">Avg Rating</span>
-                        <span className="font-bold text-slate-800">{avg} ★</span>
+                        <span className="font-bold text-slate-800">{avg} / 5</span>
                       </div>
                     </div>
                   </div>
@@ -132,7 +132,7 @@ export default function LocationsPage() {
                     </button>
 
                     <Link
-                      href={`/dashboard/qr?location=${loc.id}`}
+                      href={`/dashboard/qr-codes?location=${loc.id}`}
                       className="text-slate-700 hover:text-slate-900 font-medium inline-flex items-center gap-1"
                     >
                       <QrCode className="w-3.5 h-3.5" /> Get QR

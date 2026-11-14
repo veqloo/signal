@@ -3,7 +3,7 @@
 import { useWorkspace } from "@/lib/workspace-context";
 import { Header } from "@/components/dashboard/Header";
 import { filterFeedback, computeMetrics, computeDailyActivity } from "@/lib/analytics-helper";
-import { Star, TrendingUp, AlertTriangle, MapPin, BarChart3, CheckCircle2 } from "lucide-react";
+import { Star, TrendingUp, AlertCircle, MapPin, BarChart3, CheckCircle2 } from "lucide-react";
 
 export default function AnalyticsPage() {
   const {
@@ -146,7 +146,7 @@ export default function AnalyticsPage() {
                   </span>
                   {d.avg > 0 && (
                     <span className="text-[10px] font-bold text-amber-600 mt-0.5">
-                      {d.avg}★
+                      {d.avg} / 5
                     </span>
                   )}
                 </div>
