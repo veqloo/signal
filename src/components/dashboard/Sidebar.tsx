@@ -17,6 +17,7 @@ import {
   Sparkles,
   Command,
   Bell,
+  CreditCard,
 } from "lucide-react";
 
 export function Sidebar({ onOpenNotifications }: { onOpenNotifications?: () => void }) {
@@ -76,6 +77,11 @@ export function Sidebar({ onOpenNotifications }: { onOpenNotifications?: () => v
       href: "/dashboard/settings",
       label: "Business Settings",
       icon: Settings,
+    },
+    {
+      href: "/dashboard/billing",
+      label: "Plans & Billing",
+      icon: CreditCard,
     },
   ];
 
