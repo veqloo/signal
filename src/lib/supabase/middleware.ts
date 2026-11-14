@@ -30,21 +30,25 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Authenticate user via Supabase server-side session token
+  // Always validate the user with Supabase; never trust client-side demo flags.
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
 
-  // Protected application routes
-  const isProtectedRoute = path.startsWith("/dashboard") || path.startsWith("/onboarding");
+  const isProtectedRoute =
+    path.startsWith("/dashboard") || path.startsWith("/onboarding");
+
   const isAuthRoute =
     path === "/login" ||
     path === "/signup" ||
     path === "/forgot-password";
 
-  // Unauthenticated access to protected routes -> redirect to /login
+  // Supabase returns null for both confirmation timestamps when the email
+  // has not been verified. Check truthiness, not undefined-ness.
+  const isEmailVerified = Boolean(user?.email_confirmed_at || user?.confirmed_at);
+
   if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
@@ -52,9 +56,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // If email verification is enabled and user has not confirmed their email
-  // Prevent unconfirmed users from accessing the private dashboard
-  if (isProtectedRoute && user && !user.email_confirmed_at && user.confirmed_at === undefined) {
+  if (isProtectedRoute && user && !isEmailVerified) {
     const url = request.nextUrl.clone();
     url.pathname = "/verify-email";
     if (user.email) {
@@ -63,8 +65,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Authenticated & verified users accessing login/signup -> redirect to /dashboard
-  if (isAuthRoute && user && (user.email_confirmed_at || user.confirmed_at !== undefined)) {
+  if (isAuthRoute && user && isEmailVerified) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
