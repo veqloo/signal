@@ -248,7 +248,7 @@ export default function ReportsPage() {
                 Performance Report
               </span>
               <h2 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">
-                {business?.name || "Northside Specialty Coffee"}
+                {business?.name || "Your business"}
               </h2>
               <p className="text-xs text-slate-500 mt-1">
                 Evaluation Window: {selectedDateRange.toUpperCase()} · Location: {selectedLocationName}
