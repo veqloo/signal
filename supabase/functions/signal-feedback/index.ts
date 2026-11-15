@@ -106,9 +106,7 @@ Deno.serve(async (req: Request) => {
 
   // Prefer the IP supplied by Cloudflare. Only fall back to the first forwarded IP
   // when the request is not passing through Cloudflare.
-  const clientIp =
-    req.headers.get("cf-connecting-ip")?.trim() ||
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const clientIp = req.headers.get("cf-connecting-ip")?.trim();
   if (!clientIp) {
     return json({ error: "Could not verify request origin. Please try again." }, 503, origin);
   }
