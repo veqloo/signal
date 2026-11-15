@@ -32,7 +32,7 @@ interface WorkspaceContextType {
   addLocation: (name: string, address: string) => Promise<BusinessLocation | null>;
   deleteLocation: (id: string) => Promise<boolean>;
   updateFeedbackStatus: (id: string, status: FeedbackStatus, note?: string) => Promise<boolean>;
-  markNotificationAsRead: (id: string) => void;
+  markNotificationAsRead: (id: string) => Promise<void>;
   markAllNotificationsAsRead: () => Promise<void>;
   refreshData: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -232,6 +232,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const clerkToken = await clerkSession?.getToken();
+      if (!clerkToken) throw new Error("Your session has expired. Please sign in again.");
       const supabase = getSupabaseClient(clerkToken);
       const { error } = await supabase
         .from("businesses")
@@ -252,6 +253,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const clerkToken = await clerkSession?.getToken();
+      if (!clerkToken) throw new Error("Your session has expired. Please sign in again.");
       const supabase = getSupabaseClient(clerkToken);
       const { data, error } = await supabase
         .from("locations")
@@ -279,6 +281,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     setLocations((prev) => prev.filter((l) => l.id !== id));
     try {
       const clerkToken = await clerkSession?.getToken();
+      if (!clerkToken) throw new Error("Your session has expired. Please sign in again.");
       const supabase = getSupabaseClient(clerkToken);
       const { error } = await supabase.from("locations").delete().eq("id", id);
       if (error) throw error;
@@ -310,6 +313,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const clerkToken = await clerkSession?.getToken();
+      if (!clerkToken) throw new Error("Your session has expired. Please sign in again.");
       const supabase = getSupabaseClient(clerkToken);
       const payload: Record<string, unknown> = { status };
       if (note !== undefined) payload.internal_notes = note;
@@ -330,6 +334,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     );
     try {
       const clerkToken = await clerkSession?.getToken();
+      if (!clerkToken) throw new Error("Your session has expired. Please sign in again.");
       const supabase = getSupabaseClient(clerkToken);
       const { error } = await supabase.from("notifications").update({ is_read: true }).eq("id", id);
       if (error) throw error;
@@ -345,6 +350,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     try {
       const clerkToken = await clerkSession?.getToken();
+      if (!clerkToken) throw new Error("Your session has expired. Please sign in again.");
       const supabase = getSupabaseClient(clerkToken);
       const { error } = await supabase
         .from("notifications")
