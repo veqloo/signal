@@ -41,8 +41,7 @@ export function computeMetrics(filtered: Feedback[], allItems: Feedback[]) {
       attentionNeeded: 0,
       distribution: [5, 4, 3, 2, 1].map((r) => ({ rating: r, count: 0, percentage: 0 })),
       categories: [],
-      npsEstimate: 0,
-      trendDelta: 0,
+      ratingSentimentIndex: 0,
     };
   }
 
@@ -79,13 +78,11 @@ export function computeMetrics(filtered: Feedback[], allItems: Feedback[]) {
     percentage: Math.round((catMap[cat].count / total) * 100),
   })).sort((a, b) => b.count - a.count);
 
-  // NPS Estimate (Promoters: 5 stars, Passives: 4 stars, Detractors: 1-3 stars)
-  const promoters = filtered.filter((f) => f.rating === 5).length;
-  const detractors = filtered.filter((f) => f.rating <= 3).length;
-  const npsEstimate = Math.round(((promoters - detractors) / total) * 100);
-
-  // Trend comparison vs previous period
-  const trendDelta = +0.2; // positive evolution
+  // A 1–5 rating is not a standard 0–10 NPS survey. Keep this explicitly
+  // labelled as a rating sentiment index: 5-star share minus 1–3-star share.
+  const fiveStarRatings = filtered.filter((f) => f.rating === 5).length;
+  const lowRatings = filtered.filter((f) => f.rating <= 3).length;
+  const ratingSentimentIndex = Math.round(((fiveStarRatings - lowRatings) / total) * 100);
 
   return {
     averageRating,
@@ -94,8 +91,7 @@ export function computeMetrics(filtered: Feedback[], allItems: Feedback[]) {
     attentionNeeded,
     distribution,
     categories,
-    npsEstimate,
-    trendDelta,
+    ratingSentimentIndex,
   };
 }
 

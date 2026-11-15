@@ -32,6 +32,7 @@ function PublicFeedbackContent() {
   const [googleReviewUrl, setGoogleReviewUrl] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   const categories = [
     "Service",
@@ -76,8 +77,10 @@ function PublicFeedbackContent() {
         }
       }
     } catch (err: any) {
-      // Fallback for preview / demo
-      if (slug === "northside-coffee" || slug === "demo" || slug.startsWith("demo")) {
+      // Only the explicit demo slug may render local sample data. Never disguise a
+      // production business lookup failure as a successful demo.
+      if (slug === "demo") {
+        setIsDemoMode(true);
         setBusiness({
           id: "demo-biz-signal-001",
           name: "Northside Specialty Coffee",
@@ -85,13 +88,13 @@ function PublicFeedbackContent() {
           category: "Café & Bakery",
           welcome_message:
             "We care deeply about your experience. How was your coffee, pastry, and service today?",
-          google_review_url: "https://g.page/r/northside-coffee/review",
+          google_review_url: null,
           locations: [
             { id: "loc-01", name: "Downtown Gran Vía", slug: "downtown" },
             { id: "loc-02", name: "Uptown Roastery", slug: "uptown" },
           ],
         });
-        setGoogleReviewUrl("https://g.page/r/northside-coffee/review");
+        setGoogleReviewUrl(null);
       } else {
         setErrorMsg("This feedback link is not currently available.");
       }
@@ -104,6 +107,10 @@ function PublicFeedbackContent() {
     e.preventDefault();
     if (!rating) {
       setErrorMsg("Please select a rating from 1 to 5 stars.");
+      return;
+    }
+    if (isDemoMode) {
+      setErrorMsg("This is a demo preview. Feedback is not stored. Use a real business feedback link to submit a response.");
       return;
     }
 
@@ -135,13 +142,10 @@ function PublicFeedbackContent() {
         setGoogleReviewUrl(result.google_review_url);
       }
       setSubmitted(true);
-    } catch (err: any) {
-      // In demo / fallback mode, simulate graceful submission
-      if (slug === "northside-coffee" || slug === "demo") {
-        setSubmitted(true);
-      } else {
-        setErrorMsg(err.message || "Could not submit feedback. Please try again.");
-      }
+    } catch (err: unknown) {
+      setErrorMsg(
+        err instanceof Error ? err.message : "Could not submit feedback. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -203,6 +207,12 @@ function PublicFeedbackContent() {
                     "Your direct feedback helps us improve our service. It takes less than 30 seconds."}
                 </p>
               </div>
+
+              {isDemoMode && (
+                <div role="status" className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs leading-relaxed text-blue-800">
+                  Demo preview only. This sample form does not save or send feedback.
+                </div>
+              )}
 
               {/* Location Selector (if business has multiple branches) */}
               {business?.locations && business.locations.length > 0 && (
@@ -310,10 +320,10 @@ function PublicFeedbackContent() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isSubmitting || !rating}
+                disabled={isSubmitting || !rating || isDemoMode}
                 className="w-full py-3 px-4 rounded-xl text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 transition shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                <span>{isSubmitting ? "Submitting..." : "Send Feedback"}</span>
+                <span>{isDemoMode ? "Demo preview" : isSubmitting ? "Submitting..." : "Send Feedback"}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>

@@ -24,6 +24,7 @@ interface WorkspaceContextType {
   selectedDateRange: DateRange;
   selectedLocationId: string;
   isLoading: boolean;
+  workspaceError: string | null;
   unreadNotificationsCount: number;
   setDateRange: (range: DateRange) => void;
   setLocationFilter: (locId: string) => void;
@@ -31,8 +32,8 @@ interface WorkspaceContextType {
   addLocation: (name: string, address: string) => Promise<BusinessLocation | null>;
   deleteLocation: (id: string) => Promise<boolean>;
   updateFeedbackStatus: (id: string, status: FeedbackStatus, note?: string) => Promise<boolean>;
-  markNotificationAsRead: (id: string) => void;
-  markAllNotificationsAsRead: () => void;
+  markNotificationAsRead: (id: string) => Promise<void>;
+  markAllNotificationsAsRead: () => Promise<void>;
   refreshData: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -52,6 +53,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const [selectedDateRange, setDateRange] = useState<DateRange>("30d");
   const [selectedLocationId, setLocationFilter] = useState<string>("all");
   const [isDataLoading, setIsDataLoading] = useState<boolean>(true);
+  const [workspaceError, setWorkspaceError] = useState<string | null>(null);
 
   const userEmail = useMemo(() => {
     return clerkUser?.primaryEmailAddress?.emailAddress ?? null;
@@ -60,11 +62,14 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const loadWorkspace = useCallback(async () => {
     if (!isClerkLoaded) return;
 
+    setWorkspaceError(null);
+
     if (!isSignedIn || !clerkUser) {
       setBusiness(null);
       setLocations([]);
       setFeedback([]);
       setNotifications([]);
+      setWorkspaceError(null);
       setIsDataLoading(false);
       return;
     }
@@ -72,6 +77,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     setIsDataLoading(true);
     try {
       const clerkToken = await clerkSession?.getToken();
+      if (!clerkToken) throw new Error("Your session has expired. Please sign in again.");
       const supabase = getSupabaseClient(clerkToken);
 
       // 1. Fetch user's business from Supabase by Clerk ID
@@ -84,11 +90,14 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
       let currentBiz: Business | null = null;
 
-      if (!bizError && businesses && businesses.length > 0) {
+      if (bizError) {
+        throw new Error("Could not load your business workspace.");
+      }
+
+      if (businesses && businesses.length > 0) {
         currentBiz = businesses[0];
       } else {
-        // Fallback: If no business exists yet for this Clerk user, check by user profile email
-        // to handle legacy accounts gracefully, or provision an initial business.
+        // Provision a first business only after a successful query confirms none exists.
         const bizName =
           (clerkUser.publicMetadata?.business_name as string) ||
           `${clerkUser.firstName ? `${clerkUser.firstName}'s` : "My"} Business`;
@@ -110,8 +119,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
         if (!createBizErr && createdBiz) {
           currentBiz = createdBiz;
-        } else if (createBizErr) {
-          console.warn("[Workspace] Business insert notice:", createBizErr.message);
+        } else {
+          throw new Error("Could not create your initial business workspace.");
         }
       }
 
@@ -125,11 +134,15 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
           .eq("business_id", currentBiz.id)
           .order("created_at", { ascending: true });
 
-        if (!locsErr && locs && locs.length > 0) {
+        if (locsErr) {
+          throw new Error("Could not load business locations.");
+        }
+
+        if (locs && locs.length > 0) {
           setLocations(locs);
         } else {
-          // Provision default Main Location if none exists
-          const { data: createdLoc } = await supabase
+          // Provision default Main Location only when the query succeeded and returned no rows.
+          const { data: createdLoc, error: createLocationError } = await supabase
             .from("locations")
             .insert({
               business_id: currentBiz.id,
@@ -140,20 +153,23 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
             .select()
             .single();
 
-          if (createdLoc) {
-            setLocations([createdLoc]);
-          } else {
-            setLocations([]);
+          if (createLocationError || !createdLoc) {
+            throw new Error("Could not create the main business location.");
           }
+          setLocations([createdLoc]);
         }
 
         // 3. Fetch Real Feedback
-        const { data: feedbackData } = await supabase
+        const { data: feedbackData, error: feedbackError } = await supabase
           .from("feedback")
           .select("*, locations(name)")
           .eq("business_id", currentBiz.id)
           .order("created_at", { ascending: false })
           .limit(1000);
+
+        if (feedbackError) {
+          throw new Error("Could not load customer feedback.");
+        }
 
         if (feedbackData) {
           setFeedback(
@@ -175,12 +191,16 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         }
 
         // 4. Fetch Notifications
-        const { data: notifs } = await supabase
+        const { data: notifs, error: notificationsError } = await supabase
           .from("notifications")
           .select("*")
           .eq("business_id", currentBiz.id)
           .order("created_at", { ascending: false })
           .limit(50);
+
+        if (notificationsError) {
+          throw new Error("Could not load notifications.");
+        }
 
         if (notifs) {
           setNotifications(notifs);
@@ -190,6 +210,11 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (err) {
       console.error("Workspace initialization error:", err);
+      setWorkspaceError(
+        err instanceof Error && err.message === "Your session has expired. Please sign in again."
+          ? err.message
+          : "Signal couldn't load your workspace. Check your connection and try again."
+      );
     } finally {
       setIsDataLoading(false);
     }
@@ -201,11 +226,13 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
   const updateBusiness = async (updates: Partial<Business>): Promise<boolean> => {
     if (!business) return false;
+    const previousBusiness = business;
     const updated = { ...business, ...updates, updated_at: new Date().toISOString() };
     setBusiness(updated);
 
     try {
       const clerkToken = await clerkSession?.getToken();
+      if (!clerkToken) throw new Error("Your session has expired. Please sign in again.");
       const supabase = getSupabaseClient(clerkToken);
       const { error } = await supabase
         .from("businesses")
@@ -215,6 +242,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       return true;
     } catch (err) {
       console.error("Failed to update business:", err);
+      setBusiness(previousBusiness);
       return false;
     }
   };
@@ -225,6 +253,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const clerkToken = await clerkSession?.getToken();
+      if (!clerkToken) throw new Error("Your session has expired. Please sign in again.");
       const supabase = getSupabaseClient(clerkToken);
       const { data, error } = await supabase
         .from("locations")
@@ -248,15 +277,18 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteLocation = async (id: string): Promise<boolean> => {
+    const previousLocations = locations;
     setLocations((prev) => prev.filter((l) => l.id !== id));
     try {
       const clerkToken = await clerkSession?.getToken();
+      if (!clerkToken) throw new Error("Your session has expired. Please sign in again.");
       const supabase = getSupabaseClient(clerkToken);
       const { error } = await supabase.from("locations").delete().eq("id", id);
       if (error) throw error;
       return true;
     } catch (err) {
       console.error("Failed to delete location:", err);
+      setLocations(previousLocations);
       return false;
     }
   };
@@ -266,6 +298,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     status: FeedbackStatus,
     note?: string
   ): Promise<boolean> => {
+    const previousFeedback = feedback;
     setFeedback((prev) =>
       prev.map((item) =>
         item.id === id
@@ -280,6 +313,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const clerkToken = await clerkSession?.getToken();
+      if (!clerkToken) throw new Error("Your session has expired. Please sign in again.");
       const supabase = getSupabaseClient(clerkToken);
       const payload: Record<string, unknown> = { status };
       if (note !== undefined) payload.internal_notes = note;
@@ -288,35 +322,44 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       return true;
     } catch (err) {
       console.error("Failed to update feedback status:", err);
+      setFeedback(previousFeedback);
       return false;
     }
   };
 
   const markNotificationAsRead = async (id: string) => {
+    const previousNotifications = notifications;
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
     );
     try {
       const clerkToken = await clerkSession?.getToken();
+      if (!clerkToken) throw new Error("Your session has expired. Please sign in again.");
       const supabase = getSupabaseClient(clerkToken);
-      await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+      const { error } = await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+      if (error) throw error;
     } catch (err) {
-      console.error(err);
+      console.error("Failed to mark notification as read:", err);
+      setNotifications(previousNotifications);
     }
   };
 
   const markAllNotificationsAsRead = async () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     if (!business) return;
+    const previousNotifications = notifications;
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     try {
       const clerkToken = await clerkSession?.getToken();
+      if (!clerkToken) throw new Error("Your session has expired. Please sign in again.");
       const supabase = getSupabaseClient(clerkToken);
-      await supabase
+      const { error } = await supabase
         .from("notifications")
         .update({ is_read: true })
         .eq("business_id", business.id);
+      if (error) throw error;
     } catch (err) {
-      console.error(err);
+      console.error("Failed to mark all notifications as read:", err);
+      setNotifications(previousNotifications);
     }
   };
 
@@ -349,6 +392,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         selectedDateRange,
         selectedLocationId,
         isLoading,
+        workspaceError,
         unreadNotificationsCount,
         setDateRange,
         setLocationFilter,

@@ -287,10 +287,12 @@ export default function FeedbackInboxPage() {
               {items.map((item) => {
                 const isLow = item.rating <= 2;
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={item.id}
                     onClick={() => handleOpenDetail(item)}
-                    className="p-4 sm:px-6 hover:bg-slate-50 transition cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-3"
+                    aria-label={`Open feedback rated ${item.rating} out of 5`}
+                    className="w-full text-left p-4 sm:px-6 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-900 transition cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-3"
                   >
                     <div className="space-y-1.5 flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
@@ -357,7 +359,7 @@ export default function FeedbackInboxPage() {
                     <div className="text-[11px] text-slate-400 whitespace-nowrap self-start md:self-center">
                       {formatDate(item.created_at)}
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>

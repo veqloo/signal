@@ -5,7 +5,7 @@ interface MetricsCardsProps {
   totalResponses: number;
   positivePercentage: number;
   attentionNeeded: number;
-  npsEstimate: number;
+  ratingSentimentIndex: number;
 }
 
 export function MetricsCards({
@@ -13,7 +13,7 @@ export function MetricsCards({
   totalResponses,
   positivePercentage,
   attentionNeeded,
-  npsEstimate,
+  ratingSentimentIndex,
 }: MetricsCardsProps) {
   const hasData = totalResponses > 0;
 
@@ -32,7 +32,7 @@ export function MetricsCards({
           {hasData && <span className="text-xs text-zinc-400 font-mono">/ 5.0</span>}
         </div>
         <div className="text-[11px] text-zinc-500 mt-2 font-mono">
-          {hasData ? `${totalResponses} total verified reviews` : "Awaiting first response"}
+          {hasData ? `${totalResponses} total customer responses` : "Awaiting first response"}
         </div>
       </div>
 
@@ -50,32 +50,32 @@ export function MetricsCards({
         </div>
       </div>
 
-      {/* 3. Net Promoter Score Estimate */}
+      {/* 3. Rating sentiment index */}
       <div className="p-4 sm:p-5 rounded-lg border border-zinc-200/90 bg-white shadow-xs">
         <div className="flex items-center justify-between text-xs font-medium text-zinc-500 mb-1.5">
-          <span>NPS Index</span>
+          <span>Rating sentiment</span>
           <Sparkles className="w-3.5 h-3.5 text-blue-600" />
         </div>
         <div className="flex items-baseline gap-1.5">
           <div className="text-2xl font-bold tracking-tight text-zinc-900 font-mono">
-            {hasData ? (npsEstimate > 0 ? `+${npsEstimate}` : npsEstimate) : "—"}
+            {hasData ? (ratingSentimentIndex > 0 ? `+${ratingSentimentIndex}` : ratingSentimentIndex) : "—"}
           </div>
           {hasData && (
             <span
               className={`text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded ${
-                npsEstimate >= 50
+                ratingSentimentIndex >= 50
                   ? "bg-emerald-100 text-emerald-800"
-                  : npsEstimate >= 0
+                  : ratingSentimentIndex >= 0
                   ? "bg-blue-100 text-blue-800"
                   : "bg-red-100 text-red-800"
               }`}
             >
-              {npsEstimate >= 50 ? "Excellent" : npsEstimate >= 0 ? "Good" : "Needs Review"}
+              {ratingSentimentIndex >= 50 ? "Positive" : ratingSentimentIndex >= 0 ? "Balanced" : "Needs Review"}
             </span>
           )}
         </div>
         <div className="text-[11px] text-zinc-500 mt-2 font-mono">
-          {hasData ? `${positivePercentage}% promoters (4-5 stars)` : "NPS calculated on feedback"}
+          {hasData ? "5-star ratings minus 1–3-star ratings" : "Awaiting enough feedback"}
         </div>
       </div>
 

@@ -11,6 +11,7 @@ export default function QRStudioPage() {
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [copied, setCopied] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [template, setTemplate] = useState<"tent" | "counter" | "badge">("tent");
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -29,6 +30,7 @@ export default function QRStudioPage() {
 
   useEffect(() => {
     if (!publicUrl) return;
+    setQrDataUrl("");
     QRCode.toDataURL(publicUrl, {
       width: 400,
       margin: 2,
@@ -38,13 +40,22 @@ export default function QRStudioPage() {
       },
     })
       .then((url) => setQrDataUrl(url))
-      .catch((err) => console.error("QR Code generation error", err));
+      .catch((err) => {
+        console.error("QR Code generation error", err);
+        setErrorMsg("The QR code could not be generated. Please try again.");
+      });
   }, [publicUrl]);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(publicUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async () => {
+    if (!publicUrl) return;
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      setCopied(true);
+      setErrorMsg(null);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setErrorMsg("Clipboard access was blocked. You can still select and copy the URL above.");
+    }
   };
 
   const handleDownload = () => {
@@ -77,6 +88,7 @@ export default function QRStudioPage() {
                 <span>Print Stand</span>
               </button>
               <button
+                disabled={!qrDataUrl}
                 onClick={handleDownload}
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-md transition shadow-sm"
               >
@@ -88,7 +100,12 @@ export default function QRStudioPage() {
         />
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-6 space-y-6">
+      <div className="max-w-6xl mx-auto px-4 py-6 sm:px-6 space-y-6">
+        {errorMsg && (
+          <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+            {errorMsg}
+          </div>
+        )}
         {/* Controls Bar */}
         <div className="p-4 bg-white border border-slate-200 rounded-lg shadow-card flex flex-wrap items-center justify-between gap-4 no-print">
           {/* Location picker */}

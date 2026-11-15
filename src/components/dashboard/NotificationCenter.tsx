@@ -74,10 +74,12 @@ export function NotificationCenter({
                   : "text-blue-600 bg-blue-50 border-blue-100";
 
               return (
-                <div
+                <button
+                  type="button"
                   key={item.id}
-                  onClick={() => markNotificationAsRead(item.id)}
-                  className={`p-3 rounded-lg transition cursor-pointer mb-1 ${
+                  onClick={() => void markNotificationAsRead(item.id)}
+                  aria-label={`Mark notification as read: ${item.title}`}
+                  className={`w-full text-left p-3 rounded-lg transition cursor-pointer mb-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-900 ${
                     item.is_read ? "bg-white opacity-70" : "bg-slate-50 hover:bg-slate-100/80"
                   }`}
                 >
@@ -100,7 +102,7 @@ export function NotificationCenter({
                       </div>
                     </div>
                   </div>
-                </div>
+                </button>
               );
             })
           )}
