@@ -84,7 +84,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
       let currentBiz: Business | null = null;
 
-      if (!bizError && businesses && businesses.length > 0) {
+      if (bizError) throw bizError;
+
+      if (businesses && businesses.length > 0) {
         currentBiz = businesses[0];
       } else {
         // Fallback: If no business exists yet for this Clerk user, check by user profile email
@@ -125,10 +127,12 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
           .eq("business_id", currentBiz.id)
           .order("created_at", { ascending: true });
 
-        if (!locsErr && locs && locs.length > 0) {
+        if (locsErr) throw locsErr;
+
+        if (locs && locs.length > 0) {
           setLocations(locs);
         } else {
-          // Provision default Main Location if none exists
+          // Provision default Main Location only after a successful empty query
           const { data: createdLoc } = await supabase
             .from("locations")
             .insert({
@@ -148,12 +152,14 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         }
 
         // 3. Fetch Real Feedback
-        const { data: feedbackData } = await supabase
+        const { data: feedbackData, error: feedbackError } = await supabase
           .from("feedback")
           .select("*, locations(name)")
           .eq("business_id", currentBiz.id)
           .order("created_at", { ascending: false })
           .limit(1000);
+
+        if (feedbackError) throw feedbackError;
 
         if (feedbackData) {
           setFeedback(
@@ -187,6 +193,11 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         } else {
           setNotifications([]);
         }
+      } else {
+        setBusiness(null);
+        setLocations([]);
+        setFeedback([]);
+        setNotifications([]);
       }
     } catch (err) {
       console.error("Workspace initialization error:", err);
@@ -201,6 +212,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
   const updateBusiness = async (updates: Partial<Business>): Promise<boolean> => {
     if (!business) return false;
+    const previousBusiness = business;
     const updated = { ...business, ...updates, updated_at: new Date().toISOString() };
     setBusiness(updated);
 
@@ -214,6 +226,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       return true;
     } catch (err) {
+      setBusiness(previousBusiness);
       console.error("Failed to update business:", err);
       return false;
     }
@@ -248,12 +261,13 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteLocation = async (id: string): Promise<boolean> => {
-    setLocations((prev) => prev.filter((l) => l.id !== id));
     try {
       const clerkToken = await clerkSession?.getToken();
       const supabase = getSupabaseClient(clerkToken);
       const { error } = await supabase.from("locations").delete().eq("id", id);
       if (error) throw error;
+      setLocations((prev) => prev.filter((location) => location.id !== id));
+      if (selectedLocationId === id) setLocationFilter("all");
       return true;
     } catch (err) {
       console.error("Failed to delete location:", err);
@@ -266,6 +280,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     status: FeedbackStatus,
     note?: string
   ): Promise<boolean> => {
+    const previousFeedback = feedback;
     setFeedback((prev) =>
       prev.map((item) =>
         item.id === id
@@ -287,6 +302,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       return true;
     } catch (err) {
+      setFeedback(previousFeedback);
       console.error("Failed to update feedback status:", err);
       return false;
     }
