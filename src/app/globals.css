@@ -1,12 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  color-scheme: light;
+  --background: #f7f8fa;
+  --foreground: #17191f;
+  --muted: #667085;
+  --border: #e7e9ee;
+  --surface: #ffffff;
+  --accent: #315efb;
 }
-
+html { scroll-behavior: smooth; }
 body {
   color: var(--foreground);
   background: var(--background);
@@ -14,43 +18,32 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
-/* Custom crisp scrollbars */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+::selection { background: #dce5ff; color: #172554; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+button, a {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
+button:disabled { cursor: not-allowed; opacity: .55; }
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d5d9e2; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #aeb5c2; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
 }
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* Clean print layout */
 @media print {
-  aside,
-  header,
-  nav,
-  button,
-  .no-print {
-    display: none !important;
+  aside, header, nav, button, .no-print { display: none !important; }
+  body, main, .print-area {
+    background: #fff !important; color: #000 !important;
+    margin: 0 !important; padding: 0 !important; box-shadow: none !important;
   }
-  body,
-  main,
-  .print-area {
-    background: #ffffff !important;
-    color: #000000 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-  }
-  .print-page {
-    page-break-after: always;
-    break-after: page;
-  }
+  .print-page { page-break-after: always; break-after: page; }
 }
