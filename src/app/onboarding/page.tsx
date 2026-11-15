@@ -71,7 +71,7 @@ export default function OnboardingPage() {
       if (business) {
         const ok = await updateBusiness({
           ...details,
-          onboarding_completed: true,
+          onboarding_completed: false,
         });
         if (!ok) throw new Error("Could not update business profile. Please check your connection.");
 
@@ -80,6 +80,9 @@ export default function OnboardingPage() {
           const location = await addLocation(locationName.trim() || "Main Location", address.trim());
           if (!location) throw new Error("Your business was saved, but the first location could not be created.");
         }
+
+        const completed = await updateBusiness({ onboarding_completed: true });
+        if (!completed) throw new Error("Your business details were saved, but setup could not be completed.");
       } else {
         await createBusiness({
           ...details,
