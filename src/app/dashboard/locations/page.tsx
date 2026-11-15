@@ -39,6 +39,13 @@ export default function LocationsPage() {
     }
   };
 
+  const handleDelete = async (id: string, locationName: string) => {
+    if (!window.confirm(`Delete "${locationName}"? Existing feedback will remain, but it will no longer be linked to this location.`)) return;
+    setErrorMsg(null);
+    const deleted = await deleteLocation(id);
+    if (!deleted) setErrorMsg("We couldn't delete this location. Please try again.");
+  };
+
   const handleCopyLink = async (locSlug: string, id: string) => {
     const url = `${window.location.origin}/f/${business?.slug}?loc=${locSlug}`;
     try {
@@ -114,7 +121,7 @@ export default function LocationsPage() {
                       </div>
 
                       <button
-                        onClick={() => deleteLocation(loc.id)}
+                        onClick={() => void handleDelete(loc.id, loc.name)}
                         className="p-1 text-slate-300 hover:text-red-600 transition"
                         title="Delete location"
                         aria-label={`Delete ${loc.name}`}
@@ -170,8 +177,8 @@ export default function LocationsPage() {
       {/* Add Location Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 border border-slate-200">
-            <h3 className="text-base font-bold text-slate-900 mb-1">Add Location / Branch</h3>
+          <div role="dialog" aria-modal="true" aria-labelledby="add-location-title" className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 border border-slate-200">
+            <h3 id="add-location-title" className="text-base font-bold text-slate-900 mb-1">Add Location / Branch</h3>
             <p className="text-xs text-slate-500 mb-4">
               Add a physical branch or table section to receive localized customer feedback.
             </p>
