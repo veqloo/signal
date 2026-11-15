@@ -28,6 +28,7 @@ export default function DashboardLayout({
           <div className="relative flex-1 max-w-xs w-full bg-white">
             <button
               onClick={() => setMobileMenuOpen(false)}
+              aria-label="Close dashboard navigation"
               className="absolute top-4 right-4 p-2 text-slate-500 hover:text-slate-900"
             >
               <X className="w-5 h-5" />
