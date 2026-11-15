@@ -11,9 +11,7 @@ let standardClient: ReturnType<typeof createClient> | null = null;
 export function getSupabaseClient(token?: string | null) {
   if (token) {
     return createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey, {
-      global: {
-        headers: { Authorization: `Bearer ${token}` },
-      },
+      accessToken: async () => token,
     });
   }
 
@@ -38,19 +36,7 @@ export function useClerkSupabaseClient() {
 
   return useMemo(() => {
     return createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey, {
-      global: {
-        fetch: async (url, options = {}) => {
-          const clerkToken = await session?.getToken();
-          const headers = new Headers(options.headers);
-          if (clerkToken) {
-            headers.set("Authorization", `Bearer ${clerkToken}`);
-          }
-          return fetch(url, {
-            ...options,
-            headers,
-          });
-        },
-      },
+      accessToken: async () => (await session?.getToken()) ?? null,
     });
   }, [session]);
 }
