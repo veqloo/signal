@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { NotificationCenter } from "@/components/dashboard/NotificationCenter";
 import { Menu, X, AlertCircle, RefreshCw } from "lucide-react";
@@ -11,7 +12,15 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { workspaceError, refreshData, isLoading } = useWorkspace();
+  const { workspaceError, refreshData, isLoading, business } = useWorkspace();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !workspaceError && (!business || business.onboarding_completed === false) && pathname !== "/dashboard/settings") {
+      router.replace("/dashboard/settings");
+    }
+  }, [business, isLoading, workspaceError, pathname, router]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -42,10 +51,12 @@ export default function DashboardLayout({
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 dashboard-page-enter">
         {/* Mobile Top Header */}
         <div className="md:hidden h-14 border-b border-slate-200 bg-white px-4 flex items-center justify-between">
           <button
+            type="button"
+            aria-label="Open dashboard navigation"
             onClick={() => setMobileMenuOpen(true)}
             className="p-1.5 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100"
           >
@@ -110,6 +121,13 @@ export default function DashboardLayout({
                 <RefreshCw className="h-4 w-4" aria-hidden="true" />
                 Retry connection
               </button>
+            </div>
+          ) : !business || business.onboarding_completed === false ? (
+            <div className="mx-auto w-full max-w-xl px-4 py-16 text-center">
+              <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-blue-50 text-blue-700"><AlertCircle className="h-6 w-6" /></div>
+              <h1 className="mt-4 text-xl font-semibold tracking-tight text-zinc-950">Finish setting up your workspace</h1>
+              <p className="mt-2 text-sm leading-6 text-zinc-600">Add your business details before opening the dashboard or generating customer QR codes.</p>
+              <a href="/dashboard/settings" className="mt-6 inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800">Set up your business</a>
             </div>
           ) : children}
         </main>

@@ -7,7 +7,7 @@ import { Header } from "@/components/dashboard/Header";
 import { Download, Printer, Copy, Check, QrCode as QrIcon, Sparkles } from "lucide-react";
 
 export default function QRStudioPage() {
-  const { business, locations } = useWorkspace();
+  const { business, locations, isLoading, workspaceError } = useWorkspace();
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [copied, setCopied] = useState(false);
@@ -72,6 +72,10 @@ export default function QRStudioPage() {
 
   const activeLocObj = locations.find((l) => l.id === selectedLocation);
 
+  if (isLoading) return <div className="mx-auto w-full max-w-5xl space-y-4 px-4 py-10"><div className="h-8 w-48 animate-pulse rounded bg-zinc-200"/><div className="h-72 animate-pulse rounded-2xl border border-zinc-200 bg-white"/></div>;
+  if (workspaceError) return <div className="mx-auto max-w-xl px-4 py-16 text-center"><QrIcon className="mx-auto h-9 w-9 text-zinc-300"/><h2 className="mt-4 text-lg font-semibold text-zinc-950">QR Studio is waiting for your workspace</h2><p className="mt-2 text-sm text-zinc-500">Fix the workspace connection before generating a customer QR code.</p></div>;
+  if (!business) return <div className="mx-auto max-w-xl px-4 py-16 text-center"><QrIcon className="mx-auto h-9 w-9 text-zinc-300"/><h2 className="mt-4 text-lg font-semibold text-zinc-950">Set up your business first</h2><p className="mt-2 text-sm text-zinc-500">Your QR code will be generated from your real business and first location.</p><a href="/dashboard/settings" className="mt-5 inline-flex rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-semibold text-white">Set up business</a></div>;
+
   return (
     <div className="flex-1 pb-16">
       <div className="no-print">
@@ -81,16 +85,17 @@ export default function QRStudioPage() {
           actions={
             <div className="flex items-center gap-2">
               <button
+                disabled={!qrDataUrl}
                 onClick={handlePrint}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-md transition shadow-sm"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-md transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 shadow-sm"
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>Print Stand</span>
               </button>
               <button
-                disabled={!qrDataUrl}
+                disabled={!qrDataUrl || !business}
                 onClick={handleDownload}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-md transition shadow-sm"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-md transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 shadow-sm"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Download PNG</span>
@@ -190,10 +195,10 @@ export default function QRStudioPage() {
             <div className="print-area w-full max-w-md bg-white border-2 border-slate-900 rounded-xl p-8 shadow-xl text-center space-y-6">
               <div className="space-y-1">
                 <span className="text-[11px] font-bold tracking-widest uppercase text-slate-400">
-                  {business?.category || "Specialty Experience"}
+                  {business?.category || "Customer feedback"}
                 </span>
                 <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-                  {business?.name || "Northside Coffee"}
+                  {business?.name || "Your business"}
                 </h2>
                 {activeLocObj && (
                   <p className="text-xs font-medium text-slate-500">{activeLocObj.name}</p>
