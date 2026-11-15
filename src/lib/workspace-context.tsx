@@ -33,7 +33,7 @@ interface WorkspaceContextType {
   deleteLocation: (id: string) => Promise<boolean>;
   updateFeedbackStatus: (id: string, status: FeedbackStatus, note?: string) => Promise<boolean>;
   markNotificationAsRead: (id: string) => void;
-  markAllNotificationsAsRead: () => void;
+  markAllNotificationsAsRead: () => Promise<void>;
   refreshData: () => Promise<void>;
   signOut: () => Promise<void>;
 }
