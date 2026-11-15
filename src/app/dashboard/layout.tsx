@@ -51,10 +51,12 @@ export default function DashboardLayout({
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 dashboard-page-enter">
         {/* Mobile Top Header */}
         <div className="md:hidden h-14 border-b border-slate-200 bg-white px-4 flex items-center justify-between">
           <button
+            type="button"
+            aria-label="Open dashboard navigation"
             onClick={() => setMobileMenuOpen(true)}
             className="p-1.5 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100"
           >
