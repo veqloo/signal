@@ -32,7 +32,7 @@ export function MetricsCards({
           {hasData && <span className="text-xs text-zinc-400 font-mono">/ 5.0</span>}
         </div>
         <div className="text-[11px] text-zinc-500 mt-2 font-mono">
-          {hasData ? `${totalResponses} total verified reviews` : "Awaiting first response"}
+          {hasData ? `${totalResponses} total customer responses` : "Awaiting first response"}
         </div>
       </div>
 
