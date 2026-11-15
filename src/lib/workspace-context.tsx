@@ -118,8 +118,10 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
         if (!createBizErr && createdBiz) {
           currentBiz = createdBiz;
-        } else if (createBizErr) {
-          console.warn("[Workspace] Business insert notice:", createBizErr.message);
+        } else {
+          throw new Error(
+            createBizErr?.message || "Could not create your initial business workspace."
+          );
         }
       }
 
@@ -141,7 +143,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
           setLocations(locs);
         } else {
           // Provision default Main Location only when the query succeeded and returned no rows.
-          const { data: createdLoc } = await supabase
+          const { data: createdLoc, error: createLocationError } = await supabase
             .from("locations")
             .insert({
               business_id: currentBiz.id,
@@ -152,11 +154,12 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
             .select()
             .single();
 
-          if (createdLoc) {
-            setLocations([createdLoc]);
-          } else {
-            setLocations([]);
+          if (createLocationError || !createdLoc) {
+            throw new Error(
+              createLocationError?.message || "Could not create the main business location."
+            );
           }
+          setLocations([createdLoc]);
         }
 
         // 3. Fetch Real Feedback
@@ -342,7 +345,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     try {
       const clerkToken = await clerkSession?.getToken();
       const supabase = getSupabaseClient(clerkToken);
-      await supabase
+      const { error } = await supabase
         .from("notifications")
         .update({ is_read: true })
         .eq("business_id", business.id);
