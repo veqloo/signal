@@ -27,6 +27,8 @@ export default function DashboardOverviewPage() {
   const [activeRatingFilter, setActiveRatingFilter] = useState<number | null>(null);
   const [selectedItem, setSelectedItem] = useState<Feedback | null>(null);
   const [internalNote, setInternalNote] = useState("");
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isSavingAction, setIsSavingAction] = useState(false);
 
   // Filter feedback
   let filtered = filterFeedback(feedback, selectedDateRange, selectedLocationId);
@@ -48,15 +50,35 @@ export default function DashboardOverviewPage() {
   };
 
   const handleSaveNote = async () => {
-    if (!selectedItem) return;
-    await updateFeedbackStatus(selectedItem.id, selectedItem.status, internalNote);
-    setSelectedItem({ ...selectedItem, internal_notes: internalNote });
+    if (!selectedItem || isSavingAction) return;
+    setActionError(null);
+    setIsSavingAction(true);
+    try {
+      const saved = await updateFeedbackStatus(selectedItem.id, selectedItem.status, internalNote);
+      if (!saved) {
+        setActionError("Your note could not be saved. Please try again.");
+        return;
+      }
+      setSelectedItem({ ...selectedItem, internal_notes: internalNote });
+    } finally {
+      setIsSavingAction(false);
+    }
   };
 
   const handleStatusChange = async (status: Feedback["status"]) => {
-    if (!selectedItem) return;
-    await updateFeedbackStatus(selectedItem.id, status, internalNote);
-    setSelectedItem({ ...selectedItem, status });
+    if (!selectedItem || isSavingAction) return;
+    setActionError(null);
+    setIsSavingAction(true);
+    try {
+      const saved = await updateFeedbackStatus(selectedItem.id, status, internalNote);
+      if (!saved) {
+        setActionError("The feedback status could not be updated. Please try again.");
+        return;
+      }
+      setSelectedItem({ ...selectedItem, status });
+    } finally {
+      setIsSavingAction(false);
+    }
   };
 
   return (
@@ -200,7 +222,7 @@ export default function DashboardOverviewPage() {
       {/* Slide-over Feedback Detail & Notes Modal */}
       {selectedItem && (
         <div className="fixed inset-0 z-50 overflow-hidden bg-slate-900/30 backdrop-blur-xs flex justify-end">
-          <div className="w-full max-w-lg bg-white h-full shadow-2xl flex flex-col border-l border-slate-200 animate-in slide-in-from-right duration-200">
+          <div role="dialog" aria-modal="true" aria-label="Feedback detail" className="w-full max-w-lg bg-white h-full shadow-2xl flex flex-col border-l border-slate-200 animate-in slide-in-from-right duration-200">
             {/* Header */}
             <div className="p-5 border-b border-slate-200 flex items-center justify-between">
               <div>
@@ -226,7 +248,9 @@ export default function DashboardOverviewPage() {
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setSelectedItem(null)}
+                aria-label="Close feedback details"
                 className="p-1.5 text-slate-400 hover:text-slate-700 rounded-md"
               >
                 <X className="w-5 h-5" />
@@ -235,6 +259,11 @@ export default function DashboardOverviewPage() {
 
             {/* Content */}
             <div className="p-6 flex-1 overflow-y-auto space-y-6">
+              {actionError && (
+                <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                  {actionError}
+                </div>
+              )}
               {/* Meta */}
               <div className="grid grid-cols-2 gap-4 text-xs bg-slate-50 p-4 rounded-lg border border-slate-100">
                 <div>
@@ -274,7 +303,8 @@ export default function DashboardOverviewPage() {
                 </label>
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   <button
-                    onClick={() => handleStatusChange("read")}
+                    onClick={() => void handleStatusChange("read")}
+                    disabled={isSavingAction}
                     className={`py-2 px-3 rounded-md font-medium border transition ${
                       selectedItem.status === "read"
                         ? "bg-slate-900 text-white border-slate-900"
@@ -284,7 +314,8 @@ export default function DashboardOverviewPage() {
                     Mark as Read
                   </button>
                   <button
-                    onClick={() => handleStatusChange("flagged")}
+                    onClick={() => void handleStatusChange("flagged")}
+                    disabled={isSavingAction}
                     className={`py-2 px-3 rounded-md font-medium border transition flex items-center justify-center gap-1 ${
                       selectedItem.status === "flagged"
                         ? "bg-red-600 text-white border-red-600"
@@ -295,7 +326,8 @@ export default function DashboardOverviewPage() {
                     Flag Alert
                   </button>
                   <button
-                    onClick={() => handleStatusChange("resolved")}
+                    onClick={() => void handleStatusChange("resolved")}
+                    disabled={isSavingAction}
                     className={`py-2 px-3 rounded-md font-medium border transition flex items-center justify-center gap-1 ${
                       selectedItem.status === "resolved"
                         ? "bg-emerald-600 text-white border-emerald-600"
@@ -320,7 +352,8 @@ export default function DashboardOverviewPage() {
                   className="w-full h-24 p-3 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-slate-900"
                 />
                 <button
-                  onClick={handleSaveNote}
+                  onClick={() => void handleSaveNote()}
+                  disabled={isSavingAction}
                   className="mt-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-md transition shadow-sm"
                 >
                   Save Internal Note
