@@ -120,7 +120,7 @@ export default function ReportsPage() {
         doc.roundedRect(barX, y, barWidth, 5, 1, 1, "F");
 
         doc.setFillColor(d.rating >= 4 ? 34 : 220, d.rating >= 4 ? 197 : 38, d.rating >= 4 ? 94 : 38);
-        const fillW = Math.max(2, (d.percentage / 100) * barWidth);
+        const fillW = d.count === 0 ? 0 : Math.max(2, (d.percentage / 100) * barWidth);
         doc.roundedRect(barX, y, fillW, 5, 1, 1, "F");
 
         doc.text(`${d.count} (${d.percentage}%)`, barX + barWidth + 6, y + 4);
@@ -172,6 +172,10 @@ export default function ReportsPage() {
         doc.setDrawColor(226, 232, 240);
         const commentLines = doc.splitTextToSize(`"${c.comment}"`, pageWidth - 2 * margin - 12);
         const boxHeight = commentLines.length * 4.5 + 10;
+        if (y + boxHeight > 270) {
+          doc.addPage();
+          y = 20;
+        }
 
         doc.roundedRect(margin, y, pageWidth - 2 * margin, boxHeight, 2, 2, "FD");
 
@@ -197,6 +201,7 @@ export default function ReportsPage() {
       doc.save(`signal-executive-report-${business?.slug || "export"}.pdf`);
     } catch (err) {
       console.error("PDF generation failed", err);
+      setErrorMsg("The PDF could not be generated. Please try again.");
     } finally {
       setIsGenerating(false);
     }
