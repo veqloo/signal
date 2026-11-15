@@ -77,6 +77,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     setIsDataLoading(true);
     try {
       const clerkToken = await clerkSession?.getToken();
+      if (!clerkToken) throw new Error("Your session has expired. Please sign in again.");
       const supabase = getSupabaseClient(clerkToken);
 
       // 1. Fetch user's business from Supabase by Clerk ID
@@ -90,7 +91,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       let currentBiz: Business | null = null;
 
       if (bizError) {
-        throw new Error(`Could not load your business workspace: ${bizError.message}`);
+        throw new Error("Could not load your business workspace.");
       }
 
       if (businesses && businesses.length > 0) {
@@ -119,9 +120,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         if (!createBizErr && createdBiz) {
           currentBiz = createdBiz;
         } else {
-          throw new Error(
-            createBizErr?.message || "Could not create your initial business workspace."
-          );
+          throw new Error("Could not create your initial business workspace.");
         }
       }
 
@@ -136,7 +135,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
           .order("created_at", { ascending: true });
 
         if (locsErr) {
-          throw new Error(`Could not load business locations: ${locsErr.message}`);
+          throw new Error("Could not load business locations.");
         }
 
         if (locs && locs.length > 0) {
@@ -155,9 +154,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
             .single();
 
           if (createLocationError || !createdLoc) {
-            throw new Error(
-              createLocationError?.message || "Could not create the main business location."
-            );
+            throw new Error("Could not create the main business location.");
           }
           setLocations([createdLoc]);
         }
@@ -171,7 +168,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
           .limit(1000);
 
         if (feedbackError) {
-          throw new Error(`Could not load customer feedback: ${feedbackError.message}`);
+          throw new Error("Could not load customer feedback.");
         }
 
         if (feedbackData) {
@@ -202,7 +199,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
           .limit(50);
 
         if (notificationsError) {
-          throw new Error(`Could not load notifications: ${notificationsError.message}`);
+          throw new Error("Could not load notifications.");
         }
 
         if (notifs) {
@@ -213,7 +210,11 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (err) {
       console.error("Workspace initialization error:", err);
-      setWorkspaceError(err instanceof Error ? err.message : "Could not load your workspace. Please try again.");
+      setWorkspaceError(
+        err instanceof Error && err.message === "Your session has expired. Please sign in again."
+          ? err.message
+          : "Signal couldn't load your workspace. Check your connection and try again."
+      );
     } finally {
       setIsDataLoading(false);
     }
