@@ -90,7 +90,7 @@ export function Sidebar({ onOpenNotifications }: { onOpenNotifications?: () => v
   };
 
   return (
-    <aside className="w-64 flex-shrink-0 bg-white text-zinc-600 border-r border-zinc-200 flex flex-col justify-between min-h-screen select-none">
+    <aside className="dashboard-sidebar w-64 flex-shrink-0 bg-white text-zinc-600 border-r border-zinc-200 flex flex-col justify-between min-h-screen select-none">
       {/* Top Section */}
       <div className="space-y-6">
         {/* Workspace Selector Lockup */}
@@ -163,6 +163,7 @@ export function Sidebar({ onOpenNotifications }: { onOpenNotifications?: () => v
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-current={isActive ? "page" : undefined}
                   className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-200 hover:translate-x-0.5 active:scale-[.99] ${
                     isActive
                       ? "bg-blue-50 text-zinc-950 shadow-sm font-semibold"
