@@ -50,10 +50,13 @@ export function RecentFeedback({
         {items.slice(0, 6).map((item) => {
           const isLow = item.rating <= 2;
           return (
-            <div
+            <button
+              type="button"
               key={item.id}
               onClick={() => onSelectFeedback?.(item)}
-              className="p-4 sm:px-6 hover:bg-zinc-50/70 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer"
+              disabled={!onSelectFeedback}
+              aria-label={`Open feedback rated ${item.rating} out of 5`}
+              className="w-full text-left p-4 sm:px-6 hover:bg-zinc-50/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-zinc-900 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer disabled:cursor-default"
             >
               <div className="space-y-1.5 flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
@@ -113,7 +116,7 @@ export function RecentFeedback({
               <div className="text-[11px] text-zinc-400 whitespace-nowrap self-start sm:self-auto font-mono">
                 {formatRelativeTime(item.created_at)}
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
