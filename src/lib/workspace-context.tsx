@@ -24,6 +24,7 @@ interface WorkspaceContextType {
   selectedDateRange: DateRange;
   selectedLocationId: string;
   isLoading: boolean;
+  workspaceError: string | null;
   unreadNotificationsCount: number;
   setDateRange: (range: DateRange) => void;
   setLocationFilter: (locId: string) => void;
@@ -52,6 +53,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const [selectedDateRange, setDateRange] = useState<DateRange>("30d");
   const [selectedLocationId, setLocationFilter] = useState<string>("all");
   const [isDataLoading, setIsDataLoading] = useState<boolean>(true);
+  const [workspaceError, setWorkspaceError] = useState<string | null>(null);
 
   const userEmail = useMemo(() => {
     return clerkUser?.primaryEmailAddress?.emailAddress ?? null;
@@ -60,11 +62,14 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const loadWorkspace = useCallback(async () => {
     if (!isClerkLoaded) return;
 
+    setWorkspaceError(null);
+
     if (!isSignedIn || !clerkUser) {
       setBusiness(null);
       setLocations([]);
       setFeedback([]);
       setNotifications([]);
+      setWorkspaceError(null);
       setIsDataLoading(false);
       return;
     }
@@ -84,11 +89,14 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
       let currentBiz: Business | null = null;
 
-      if (!bizError && businesses && businesses.length > 0) {
+      if (bizError) {
+        throw new Error(`Could not load your business workspace: ${bizError.message}`);
+      }
+
+      if (businesses && businesses.length > 0) {
         currentBiz = businesses[0];
       } else {
-        // Fallback: If no business exists yet for this Clerk user, check by user profile email
-        // to handle legacy accounts gracefully, or provision an initial business.
+        // Provision a first business only after a successful query confirms none exists.
         const bizName =
           (clerkUser.publicMetadata?.business_name as string) ||
           `${clerkUser.firstName ? `${clerkUser.firstName}'s` : "My"} Business`;
@@ -125,10 +133,14 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
           .eq("business_id", currentBiz.id)
           .order("created_at", { ascending: true });
 
-        if (!locsErr && locs && locs.length > 0) {
+        if (locsErr) {
+          throw new Error(`Could not load business locations: ${locsErr.message}`);
+        }
+
+        if (locs && locs.length > 0) {
           setLocations(locs);
         } else {
-          // Provision default Main Location if none exists
+          // Provision default Main Location only when the query succeeded and returned no rows.
           const { data: createdLoc } = await supabase
             .from("locations")
             .insert({
@@ -148,12 +160,16 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         }
 
         // 3. Fetch Real Feedback
-        const { data: feedbackData } = await supabase
+        const { data: feedbackData, error: feedbackError } = await supabase
           .from("feedback")
           .select("*, locations(name)")
           .eq("business_id", currentBiz.id)
           .order("created_at", { ascending: false })
           .limit(1000);
+
+        if (feedbackError) {
+          throw new Error(`Could not load customer feedback: ${feedbackError.message}`);
+        }
 
         if (feedbackData) {
           setFeedback(
@@ -175,12 +191,16 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         }
 
         // 4. Fetch Notifications
-        const { data: notifs } = await supabase
+        const { data: notifs, error: notificationsError } = await supabase
           .from("notifications")
           .select("*")
           .eq("business_id", currentBiz.id)
           .order("created_at", { ascending: false })
           .limit(50);
+
+        if (notificationsError) {
+          throw new Error(`Could not load notifications: ${notificationsError.message}`);
+        }
 
         if (notifs) {
           setNotifications(notifs);
@@ -190,6 +210,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (err) {
       console.error("Workspace initialization error:", err);
+      setWorkspaceError(err instanceof Error ? err.message : "Could not load your workspace. Please try again.");
     } finally {
       setIsDataLoading(false);
     }
@@ -349,6 +370,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         selectedDateRange,
         selectedLocationId,
         isLoading,
+        workspaceError,
         unreadNotificationsCount,
         setDateRange,
         setLocationFilter,
