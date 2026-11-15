@@ -339,9 +339,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   };
 
   const markAllNotificationsAsRead = async () => {
+    if (!business) return;
     const previousNotifications = notifications;
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-    if (!business) return;
     try {
       const clerkToken = await clerkSession?.getToken();
       const supabase = getSupabaseClient(clerkToken);
