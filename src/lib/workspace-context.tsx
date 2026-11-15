@@ -222,6 +222,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
   const updateBusiness = async (updates: Partial<Business>): Promise<boolean> => {
     if (!business) return false;
+    const previousBusiness = business;
     const updated = { ...business, ...updates, updated_at: new Date().toISOString() };
     setBusiness(updated);
 
@@ -236,6 +237,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       return true;
     } catch (err) {
       console.error("Failed to update business:", err);
+      setBusiness(previousBusiness);
       return false;
     }
   };
@@ -269,6 +271,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteLocation = async (id: string): Promise<boolean> => {
+    const previousLocations = locations;
     setLocations((prev) => prev.filter((l) => l.id !== id));
     try {
       const clerkToken = await clerkSession?.getToken();
@@ -278,6 +281,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       return true;
     } catch (err) {
       console.error("Failed to delete location:", err);
+      setLocations(previousLocations);
       return false;
     }
   };
@@ -287,6 +291,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     status: FeedbackStatus,
     note?: string
   ): Promise<boolean> => {
+    const previousFeedback = feedback;
     setFeedback((prev) =>
       prev.map((item) =>
         item.id === id
@@ -309,24 +314,29 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       return true;
     } catch (err) {
       console.error("Failed to update feedback status:", err);
+      setFeedback(previousFeedback);
       return false;
     }
   };
 
   const markNotificationAsRead = async (id: string) => {
+    const previousNotifications = notifications;
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
     );
     try {
       const clerkToken = await clerkSession?.getToken();
       const supabase = getSupabaseClient(clerkToken);
-      await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+      const { error } = await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+      if (error) throw error;
     } catch (err) {
-      console.error(err);
+      console.error("Failed to mark notification as read:", err);
+      setNotifications(previousNotifications);
     }
   };
 
   const markAllNotificationsAsRead = async () => {
+    const previousNotifications = notifications;
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
     if (!business) return;
     try {
@@ -336,8 +346,10 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         .from("notifications")
         .update({ is_read: true })
         .eq("business_id", business.id);
+      if (error) throw error;
     } catch (err) {
-      console.error(err);
+      console.error("Failed to mark all notifications as read:", err);
+      setNotifications(previousNotifications);
     }
   };
 
