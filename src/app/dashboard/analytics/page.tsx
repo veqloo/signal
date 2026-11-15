@@ -50,8 +50,9 @@ export default function AnalyticsPage() {
   const maxDayCount = Math.max(1, ...dayOfWeekList.map((d) => d.count));
 
   // Locations benchmark aggregation
+  const allLocationsInRange = filterFeedback(feedback, selectedDateRange, "all");
   const locationStats = locations.map((loc) => {
-    const locItems = feedback.filter((f) => f.location_id === loc.id);
+    const locItems = allLocationsInRange.filter((f) => f.location_id === loc.id);
     const count = locItems.length;
     const avg = count > 0 ? locItems.reduce((acc, f) => acc + f.rating, 0) / count : 0;
     const positive = count > 0 ? Math.round((locItems.filter((f) => f.rating >= 4).length / count) * 100) : 0;
@@ -83,7 +84,7 @@ export default function AnalyticsPage() {
               Rating Sentiment Index
             </span>
             <div className="text-3xl font-bold tracking-tight text-slate-900">
-              +{metrics.ratingSentimentIndex}
+              {metrics.ratingSentimentIndex > 0 ? "+" : ""}{metrics.ratingSentimentIndex}
             </div>
             <p className="text-[11px] text-emerald-600 font-medium mt-1">
               5-star ratings minus 1–3-star ratings
@@ -92,7 +93,7 @@ export default function AnalyticsPage() {
 
           <div className="p-5 rounded-lg border border-slate-200 bg-white shadow-card">
             <span className="text-xs font-medium text-slate-500 block mb-1">
-              Customer Retention Risk
+              Low-rating share
             </span>
             <div className="text-3xl font-bold tracking-tight text-slate-900">
               {metrics.totalResponses > 0
@@ -101,19 +102,19 @@ export default function AnalyticsPage() {
               %
             </div>
             <p className="text-[11px] text-slate-500 mt-1">
-              {metrics.attentionNeeded} customers reported unsatisfactory visits
+              {metrics.attentionNeeded} responses rated 1–2 stars
             </p>
           </div>
 
           <div className="p-5 rounded-lg border border-slate-200 bg-white shadow-card">
             <span className="text-xs font-medium text-slate-500 block mb-1">
-              Public Review Potential
+              Positive rating share
             </span>
             <div className="text-3xl font-bold tracking-tight text-slate-900">
               {metrics.positivePercentage}%
             </div>
             <p className="text-[11px] text-slate-500 mt-1">
-              Qualified happy patrons invited to Google Reviews
+              All customers receive the same optional Google review invitation
             </p>
           </div>
         </div>
