@@ -14,8 +14,14 @@ jobs:
           node-version: 22
           cache: "npm"
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Validate legacy frontend module and configuration
         run: node scripts/check.mjs
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Type-check Supabase Edge Function
+        run: deno check supabase/functions/signal-feedback/index.ts
       - name: Build Next.js application & check types
         run: npm run build
