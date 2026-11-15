@@ -20,7 +20,7 @@ import {
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { business, updateBusiness, addLocation } = useWorkspace();
+  const { business, locations, createBusiness, updateBusiness, addLocation, refreshData } = useWorkspace();
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [businessName, setBusinessName] = useState(business?.name || "");
@@ -61,24 +61,34 @@ export default function OnboardingPage() {
     setIsSubmitting(true);
 
     try {
-      // 1. Update business details
-      const ok = await updateBusiness({
+      const details = {
         name: businessName.trim(),
         category,
         welcome_message: welcomeMessage.trim() || null,
         google_review_url: googleReviewUrl.trim() || null,
-        onboarding_completed: true,
-      });
+      };
 
-      if (!ok) {
-        throw new Error("Could not update business profile. Please check your connection.");
+      if (business) {
+        const ok = await updateBusiness({
+          ...details,
+          onboarding_completed: true,
+        });
+        if (!ok) throw new Error("Could not update business profile. Please check your connection.");
+
+        // Existing workspaces created before onboarding may not have a location yet.
+        if (locations.length === 0) {
+          const location = await addLocation(locationName.trim() || "Main Location", address.trim());
+          if (!location) throw new Error("Your business was saved, but the first location could not be created.");
+        }
+      } else {
+        await createBusiness({
+          ...details,
+          location_name: locationName.trim() || "Main Location",
+          location_address: address.trim(),
+        });
       }
 
-      // 2. Add initial location if provided
-      if (locationName.trim()) {
-        await addLocation(locationName.trim(), address.trim());
-      }
-
+      await refreshData();
       setStep(4);
     } catch (err: any) {
       setErrorMsg(err.message || "Could not save onboarding profile.");
