@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import QRCode from "qrcode";
 import { useWorkspace } from "@/lib/workspace-context";
+import { CONFIG } from "@/lib/config";
 import { Header } from "@/components/dashboard/Header";
 import { Download, Printer, Copy, Check, QrCode as QrIcon, Sparkles } from "lucide-react";
 
@@ -18,7 +19,7 @@ export default function QRStudioPage() {
   // Compute public feedback link
   const getPublicUrl = () => {
     if (typeof window === "undefined" || !business) return "";
-    let url = `${window.location.origin}/f/${business.slug}`;
+    let url = `${CONFIG.appUrl}/f/${business.slug}`;
     if (selectedLocation !== "all") {
       const loc = locations.find((l) => l.id === selectedLocation);
       if (loc) url += `?loc=${loc.slug}`;
