@@ -32,13 +32,15 @@ export function ActivityChart({ days }: { days: ActivityDay[] }) {
 
       <div className="h-44 flex items-end justify-between gap-2 pt-6 pb-2">
         {days.map((day) => {
-          const heightPercent = Math.max(8, Math.round((day.count / maxCount) * 100));
+          const heightPercent = day.count === 0 ? 0 : Math.max(8, Math.round((day.count / maxCount) * 100));
           return (
             <div
               key={day.dateStr}
               onMouseEnter={() => setHoveredDay(day)}
               onMouseLeave={() => setHoveredDay(null)}
               className="flex-1 flex flex-col items-center h-full justify-end group cursor-pointer"
+              aria-label={`${day.label}: ${day.count} responses`}
+              title={`${day.label}: ${day.count} responses`}
             >
               <div className="w-full relative flex items-end justify-center h-full">
                 <div
