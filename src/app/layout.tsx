@@ -6,7 +6,6 @@ import { WorkspaceProvider } from "@/lib/workspace-context";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
 };
 
 export const metadata: Metadata = {
@@ -16,7 +15,7 @@ export const metadata: Metadata = {
   keywords: [
     "customer feedback",
     "QR code feedback",
-    "NPS software",
+    "customer satisfaction analytics",
     "satisfaction analytics",
     "Google reviews",
     "restaurant feedback",
