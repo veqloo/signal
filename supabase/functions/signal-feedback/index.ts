@@ -89,12 +89,30 @@ Deno.serve(async (req: Request) => {
   }
 
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405, origin);
+  const contentLength = Number(req.headers.get("content-length") || 0);
+  if (contentLength > 12_000) return json({ error: "Request is too large." }, 413, origin);
+
   let body: Record<string, unknown>;
-  try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400, origin); }
+  try {
+    const rawBody = await req.text();
+    if (rawBody.length > 12_000) return json({ error: "Request is too large." }, 413, origin);
+    const parsed: unknown = JSON.parse(rawBody);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return json({ error: "Invalid request body." }, 400, origin);
+    }
+    body = parsed as Record<string, unknown>;
+  } catch {
+    return json({ error: "Invalid JSON" }, 400, origin);
+  }
 
   const slug = typeof body.slug === "string" ? body.slug : "";
   const rating = Number(body.rating);
-  const category = typeof body.category === "string" ? body.category.trim().slice(0, 80) : null;
+  const allowedCategories = new Set(["Service", "Quality", "Speed", "Atmosphere", "Cleanliness", "Value", "Other"]);
+  const rawCategory = typeof body.category === "string" ? body.category.trim() : "";
+  if (rawCategory && !allowedCategories.has(rawCategory)) {
+    return json({ error: "Please select a valid feedback category." }, 400, origin);
+  }
+  const category = rawCategory || null;
   const comment = typeof body.comment === "string" ? body.comment.trim().slice(0, 4000) : null;
   const locationSlug = typeof body.location_slug === "string" ? body.location_slug.trim().slice(0, 80) : null;
   const rawLocationId = typeof body.location_id === "string" && body.location_id.trim() ? body.location_id.trim() : null;
@@ -104,9 +122,14 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Please provide a valid business link and rating from 1 to 5." }, 400, origin);
   }
 
-  // Prefer the IP supplied by Cloudflare. Only fall back to the first forwarded IP
-  // when the request is not passing through Cloudflare.
-  const clientIp = req.headers.get("cf-connecting-ip")?.trim();
+  // Supabase Edge Functions may be reached directly rather than through the
+  // user's Cloudflare zone. Prefer Cloudflare's client IP when present, then
+  // use the gateway-provided forwarding headers.
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  const clientIp =
+    req.headers.get("cf-connecting-ip")?.trim() ||
+    req.headers.get("x-real-ip")?.trim() ||
+    forwardedFor?.split(",")[0]?.trim();
   if (!clientIp) {
     return json({ error: "Could not verify request origin. Please try again." }, 503, origin);
   }
