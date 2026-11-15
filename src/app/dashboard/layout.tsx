@@ -97,6 +97,20 @@ export default function DashboardLayout({
                 <div className="h-64 animate-pulse rounded-xl border border-slate-200 bg-white" />
               </div>
             </div>
+          ) : workspaceError ? (
+            <div className="mx-auto w-full max-w-2xl px-4 py-16 text-center sm:px-6">
+              <AlertCircle className="mx-auto h-8 w-8 text-amber-600" aria-hidden="true" />
+              <h1 className="mt-4 text-lg font-semibold tracking-tight text-slate-900">Workspace data is unavailable</h1>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">Signal has kept your existing data safe, but could not load it. Retry the connection before making changes.</p>
+              <button
+                type="button"
+                onClick={() => void refreshData()}
+                className="mt-5 inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+              >
+                <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                Retry connection
+              </button>
+            </div>
           ) : children}
         </main>
       </div>
