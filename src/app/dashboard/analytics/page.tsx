@@ -80,13 +80,13 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-5 rounded-lg border border-slate-200 bg-white shadow-card">
             <span className="text-xs font-medium text-slate-500 block mb-1">
-              Estimated Net Promoter Score (NPS)
+              Rating Sentiment Index
             </span>
             <div className="text-3xl font-bold tracking-tight text-slate-900">
-              +{metrics.npsEstimate}
+              +{metrics.ratingSentimentIndex}
             </div>
             <p className="text-[11px] text-emerald-600 font-medium mt-1">
-              Excellent benchmark (&gt; +50 is world-class)
+              5-star ratings minus 1–3-star ratings
             </p>
           </div>
 
@@ -131,7 +131,7 @@ export default function AnalyticsPage() {
 
           <div className="grid grid-cols-7 gap-3 pt-4">
             {dayOfWeekList.map((d) => {
-              const heightPct = Math.max(10, Math.round((d.count / maxDayCount) * 100));
+              const heightPct = d.count === 0 ? 0 : Math.max(10, Math.round((d.count / maxDayCount) * 100));
               return (
                 <div key={d.day} className="flex flex-col items-center">
                   <div className="h-28 w-full flex items-end justify-center">
