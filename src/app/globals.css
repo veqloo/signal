@@ -92,3 +92,14 @@ body {
     transition-duration: .01ms !important;
   }
 }
+
+.dashboard-sidebar a svg {
+  transition: transform 180ms cubic-bezier(.2,.8,.2,1), color 180ms ease;
+}
+.dashboard-sidebar a:hover svg {
+  transform: scale(1.08);
+}
+.dashboard-sidebar a[aria-current="page"] {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
