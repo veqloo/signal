@@ -80,7 +80,7 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-5 rounded-lg border border-slate-200 bg-white shadow-card">
             <span className="text-xs font-medium text-slate-500 block mb-1">
-              Estimated Net Promoter Score (NPS)
+              Rating balance
             </span>
             <div className="text-3xl font-bold tracking-tight text-slate-900">
               +{metrics.npsEstimate}
@@ -113,7 +113,7 @@ export default function AnalyticsPage() {
               {metrics.positivePercentage}%
             </div>
             <p className="text-[11px] text-slate-500 mt-1">
-              Qualified happy patrons invited to Google Reviews
+              Customers can choose to leave a public review
             </p>
           </div>
         </div>

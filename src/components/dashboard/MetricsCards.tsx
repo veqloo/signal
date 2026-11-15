@@ -50,10 +50,10 @@ export function MetricsCards({
         </div>
       </div>
 
-      {/* 3. Net Promoter Score Estimate */}
+      {/* 3. Rating balance (not NPS: feedback uses a 1–5 scale) */}
       <div className="p-4 sm:p-5 rounded-lg border border-zinc-200/90 bg-white shadow-xs">
         <div className="flex items-center justify-between text-xs font-medium text-zinc-500 mb-1.5">
-          <span>NPS Index</span>
+          <span>Rating balance</span>
           <Sparkles className="w-3.5 h-3.5 text-blue-600" />
         </div>
         <div className="flex items-baseline gap-1.5">
@@ -75,7 +75,7 @@ export function MetricsCards({
           )}
         </div>
         <div className="text-[11px] text-zinc-500 mt-2 font-mono">
-          {hasData ? `${positivePercentage}% promoters (4-5 stars)` : "NPS calculated on feedback"}
+          {hasData ? `${positivePercentage}% positive ratings (4–5 stars)` : "Based on customer ratings"}
         </div>
       </div>
 

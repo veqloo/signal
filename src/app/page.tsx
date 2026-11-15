@@ -29,11 +29,6 @@ function HomePageContent() {
   const searchParams = useSearchParams();
   const legacyBusinessParam = searchParams.get("business");
 
-  // Backwards compatibility: if accessed via /?business=slug, render public feedback form
-  if (legacyBusinessParam) {
-    return <PublicFeedbackPage />;
-  }
-
   // Interactive Live Demo State
   const [demoRating, setDemoRating] = useState<number>(5);
   const [demoCategory, setDemoCategory] = useState<string>("Quality");
@@ -51,6 +46,11 @@ function HomePageContent() {
   const handleResetDemo = () => {
     setDemoSubmitted(false);
   };
+
+  // Keep all hooks above this branch so changing the query string never changes hook order.
+  if (legacyBusinessParam) {
+    return <PublicFeedbackPage />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-between">

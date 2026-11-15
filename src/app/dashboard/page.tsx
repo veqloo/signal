@@ -38,10 +38,9 @@ export default function DashboardOverviewPage() {
   const activityDays = computeDailyActivity(filtered, selectedDateRange === "7d" ? 7 : 14);
 
   // Generate trend points for satisfaction trend chart
-  const trendPoints = activityDays.map((d) => ({
-    label: d.label,
-    avg: d.avgRating > 0 ? d.avgRating : 4.5,
-  }));
+  const trendPoints = activityDays
+    .filter((day) => day.avgRating > 0)
+    .map((day) => ({ label: day.label, avg: day.avgRating }));
 
   const handleOpenDetail = (item: Feedback) => {
     setSelectedItem(item);
