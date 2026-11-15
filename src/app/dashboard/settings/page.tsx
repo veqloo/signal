@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -26,6 +26,14 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!business) return;
+    setName(business.name || "");
+    setCategory(business.category || "");
+    setWelcomeMessage(business.welcome_message || "");
+    setGoogleReviewUrl(business.google_review_url || "");
+  }, [business]);
 
   const handleOnboarding = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -283,7 +291,7 @@ export default function SettingsPage() {
               Your unique public identification path on Signal.
             </p>
             <div className="text-xs font-mono bg-slate-50 px-3 py-2 rounded border border-slate-200 text-slate-700 inline-block">
-              {business?.slug || "northside-coffee"}
+              {business?.slug || "Not created yet"}
             </div>
           </div>
 
