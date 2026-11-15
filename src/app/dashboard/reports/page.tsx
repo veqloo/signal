@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useWorkspace } from "@/lib/workspace-context";
 import { Header } from "@/components/dashboard/Header";
 import { filterFeedback, computeMetrics } from "@/lib/analytics-helper";
@@ -9,13 +10,25 @@ import { FileText, Download, CheckCircle, Calendar, Sparkles } from "lucide-reac
 import { formatDate } from "@/lib/utils";
 
 export default function ReportsPage() {
-  const { business, feedback, selectedDateRange, selectedLocationId } = useWorkspace();
+  const { business, locations, feedback, selectedDateRange, selectedLocationId } = useWorkspace();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const selectedLocationName =
+    selectedLocationId === "all"
+      ? "All locations"
+      : locations.find((location) => location.id === selectedLocationId)?.name || "Selected location";
 
   const filtered = filterFeedback(feedback, selectedDateRange, selectedLocationId);
   const metrics = computeMetrics(filtered, feedback);
 
   const handleGeneratePDF = () => {
+    if (filtered.length === 0) {
+      setErrorMsg("There is no feedback in this period to export yet.");
+      return;
+    }
+
+    setErrorMsg(null);
     setIsGenerating(true);
     try {
       const doc = new jsPDF({
@@ -52,7 +65,7 @@ export default function ReportsPage() {
       doc.setFontSize(9);
       doc.setTextColor(100, 116, 139);
       doc.text(
-        `Report Period: ${selectedDateRange.toUpperCase()} · Total Responses Analyzed: ${metrics.totalResponses}`,
+        `Report Period: ${selectedDateRange.toUpperCase()} · Location: ${selectedLocationName} · Responses: ${metrics.totalResponses}`,
         margin,
         y + 6
       );
@@ -66,7 +79,7 @@ export default function ReportsPage() {
         { label: "Average Rating", val: `${metrics.averageRating} / 5.0` },
         { label: "Positive Sentiment", val: `${metrics.positivePercentage}%` },
         { label: "Attention Needed", val: `${metrics.attentionNeeded}` },
-        { label: "Net Sentiment (NPS)", val: `+${metrics.npsEstimate}` },
+        { label: "Rating sentiment index", val: `${metrics.ratingSentimentIndex > 0 ? "+" : ""}${metrics.ratingSentimentIndex}` },
       ];
 
       kpis.forEach((kpi, i) => {
@@ -197,7 +210,7 @@ export default function ReportsPage() {
         actions={
           <button
             onClick={handleGeneratePDF}
-            disabled={isGenerating}
+            disabled={isGenerating || filtered.length === 0}
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 px-3.5 py-1.5 rounded-md transition shadow-sm disabled:opacity-50"
           >
             <Download className="w-3.5 h-3.5" />
@@ -206,20 +219,34 @@ export default function ReportsPage() {
         }
       />
 
-      <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
+      <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 space-y-6">
+        {errorMsg && (
+          <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+            {errorMsg}
+          </div>
+        )}
+        {filtered.length === 0 && (
+          <div className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center">
+            <p className="text-sm font-semibold text-slate-900">No feedback to report yet</p>
+            <p className="mt-1 text-xs text-slate-500">Collect your first customer response before exporting an executive report.</p>
+            <Link href="/dashboard/qr-codes" className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-blue-700 hover:underline">
+              Open QR Studio
+            </Link>
+          </div>
+        )}
         {/* Report Preview Document */}
         <div className="bg-white border border-slate-200 rounded-xl shadow-card p-8 space-y-8">
           {/* Header */}
           <div className="border-b border-slate-100 pb-6 flex items-start justify-between">
             <div>
               <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">
-                Monthly Performance Report
+                Performance Report
               </span>
               <h2 className="text-2xl font-bold tracking-tight text-slate-900 mt-1">
                 {business?.name || "Northside Specialty Coffee"}
               </h2>
               <p className="text-xs text-slate-500 mt-1">
-                Evaluation Window: {selectedDateRange.toUpperCase()} · Location: All Locations
+                Evaluation Window: {selectedDateRange.toUpperCase()} · Location: {selectedLocationName}
               </p>
             </div>
             <div className="text-right">
@@ -281,17 +308,19 @@ export default function ReportsPage() {
                   <strong>High positive sentiment:</strong> {metrics.positivePercentage}% of customers rated their experience 4 or 5 stars.
                 </span>
               </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                <span>
-                  <strong>Top rated area:</strong> {metrics.categories[0]?.name || "Quality"} received consistent top marks across all shifts.
-                </span>
-              </li>
+              {metrics.categories[0] && (
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                  <span>
+                    <strong>Most-mentioned category:</strong> {metrics.categories[0].name} received {metrics.categories[0].count} responses with an average rating of {metrics.categories[0].average} / 5.
+                  </span>
+                </li>
+              )}
               {metrics.attentionNeeded > 0 && (
                 <li className="flex items-start gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0 mt-1.5" />
                   <span>
-                    <strong>Action item:</strong> {metrics.attentionNeeded} customer responses flagged wait time or table clearing.
+                    <strong>Action item:</strong> {metrics.attentionNeeded} responses received a 1–2 star rating and may need follow-up.
                   </span>
                 </li>
               )}
