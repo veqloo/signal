@@ -80,140 +80,71 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       if (!clerkToken) throw new Error("Your session has expired. Please sign in again.");
       const supabase = getSupabaseClient(clerkToken);
 
-      // 1. Fetch user's business from Supabase by Clerk ID
-      let { data: businesses, error: bizError } = await supabase
+      // Resolve only a business explicitly owned by the signed-in Clerk user.
+      // Do not silently create a demo/default restaurant when the query is empty.
+      const { data: businesses, error: bizError } = await supabase
         .from("businesses")
         .select("*")
         .eq("owner_id", clerkUser.id)
         .order("created_at", { ascending: true })
         .limit(1);
 
-      let currentBiz: Business | null = null;
-
       if (bizError) {
-        throw new Error("Could not load your business workspace.");
+        console.error("Business lookup failed:", bizError);
+        throw new Error(`Could not load your business workspace: ${bizError.message}`);
       }
 
-      if (businesses && businesses.length > 0) {
-        currentBiz = businesses[0];
-      } else {
-        // Provision a first business only after a successful query confirms none exists.
-        const bizName =
-          (clerkUser.publicMetadata?.business_name as string) ||
-          `${clerkUser.firstName ? `${clerkUser.firstName}'s` : "My"} Business`;
-        const bizSlug = `${slugify(bizName)}-${clerkUser.id.substring(clerkUser.id.length - 4)}`;
-        const bizCategory =
-          (clerkUser.publicMetadata?.business_category as string) || "Café & Restaurant";
-
-        const { data: createdBiz, error: createBizErr } = await supabase
-          .from("businesses")
-          .insert({
-            owner_id: clerkUser.id,
-            name: bizName,
-            slug: bizSlug,
-            category: bizCategory,
-            onboarding_completed: false,
-          })
-          .select()
-          .single();
-
-        if (!createBizErr && createdBiz) {
-          currentBiz = createdBiz;
-        } else {
-          throw new Error("Could not create your initial business workspace.");
-        }
+      const currentBiz: Business | null = businesses?.[0] ?? null;
+      if (!currentBiz) {
+        setBusiness(null);
+        setLocations([]);
+        setFeedback([]);
+        setNotifications([]);
+        return;
       }
 
-      if (currentBiz) {
-        setBusiness(currentBiz);
+      setBusiness(currentBiz);
 
-        // 2. Fetch Locations
-        const { data: locs, error: locsErr } = await supabase
-          .from("locations")
-          .select("*")
-          .eq("business_id", currentBiz.id)
-          .order("created_at", { ascending: true });
+      const { data: locs, error: locsErr } = await supabase
+        .from("locations")
+        .select("*")
+        .eq("business_id", currentBiz.id)
+        .order("created_at", { ascending: true });
+      if (locsErr) throw new Error(`Could not load business locations: ${locsErr.message}`);
+      setLocations(locs ?? []);
 
-        if (locsErr) {
-          throw new Error("Could not load business locations.");
-        }
+      const { data: feedbackData, error: feedbackError } = await supabase
+        .from("feedback")
+        .select("*, locations(name)")
+        .eq("business_id", currentBiz.id)
+        .order("created_at", { ascending: false })
+        .limit(1000);
+      if (feedbackError) throw new Error(`Could not load customer feedback: ${feedbackError.message}`);
+      setFeedback((feedbackData ?? []).map((item: any) => ({
+        id: item.id,
+        business_id: item.business_id,
+        location_id: item.location_id || null,
+        location_name: item.locations?.name || undefined,
+        rating: item.rating,
+        category: item.category || null,
+        comment: item.comment || null,
+        created_at: item.created_at,
+        status: (item.status as FeedbackStatus) || "new",
+        internal_notes: item.internal_notes || null,
+      })));
 
-        if (locs && locs.length > 0) {
-          setLocations(locs);
-        } else {
-          // Provision default Main Location only when the query succeeded and returned no rows.
-          const { data: createdLoc, error: createLocationError } = await supabase
-            .from("locations")
-            .insert({
-              business_id: currentBiz.id,
-              name: "Main Location",
-              slug: "main",
-              is_active: true,
-            })
-            .select()
-            .single();
-
-          if (createLocationError || !createdLoc) {
-            throw new Error("Could not create the main business location.");
-          }
-          setLocations([createdLoc]);
-        }
-
-        // 3. Fetch Real Feedback
-        const { data: feedbackData, error: feedbackError } = await supabase
-          .from("feedback")
-          .select("*, locations(name)")
-          .eq("business_id", currentBiz.id)
-          .order("created_at", { ascending: false })
-          .limit(1000);
-
-        if (feedbackError) {
-          throw new Error("Could not load customer feedback.");
-        }
-
-        if (feedbackData) {
-          setFeedback(
-            feedbackData.map((f: any) => ({
-              id: f.id,
-              business_id: f.business_id,
-              location_id: f.location_id || null,
-              location_name: f.locations?.name || undefined,
-              rating: f.rating,
-              category: f.category || null,
-              comment: f.comment || null,
-              created_at: f.created_at,
-              status: (f.status as FeedbackStatus) || "new",
-              internal_notes: f.internal_notes || null,
-            }))
-          );
-        } else {
-          setFeedback([]);
-        }
-
-        // 4. Fetch Notifications
-        const { data: notifs, error: notificationsError } = await supabase
-          .from("notifications")
-          .select("*")
-          .eq("business_id", currentBiz.id)
-          .order("created_at", { ascending: false })
-          .limit(50);
-
-        if (notificationsError) {
-          throw new Error("Could not load notifications.");
-        }
-
-        if (notifs) {
-          setNotifications(notifs);
-        } else {
-          setNotifications([]);
-        }
-      }
+      const { data: notifs, error: notificationsError } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("business_id", currentBiz.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (notificationsError) throw new Error(`Could not load notifications: ${notificationsError.message}`);
+      setNotifications(notifs ?? []);
     } catch (err) {
       console.error("Workspace initialization error:", err);
       setWorkspaceError(
-        err instanceof Error && err.message === "Your session has expired. Please sign in again."
-          ? err.message
-          : "Signal couldn't load your workspace. Check your connection and try again."
+        err instanceof Error ? err.message : "Signal couldn't load your workspace. Check your connection and try again."
       );
     } finally {
       setIsDataLoading(false);
