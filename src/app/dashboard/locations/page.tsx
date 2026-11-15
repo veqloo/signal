@@ -13,26 +13,42 @@ export default function LocationsPage() {
   const [address, setAddress] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim()) {
+      setErrorMsg("Enter a name for this location.");
+      return;
+    }
+    setErrorMsg(null);
     setIsSubmitting(true);
     try {
-      await addLocation(name.trim(), address.trim());
+      const created = await addLocation(name.trim(), address.trim());
+      if (!created) {
+        setErrorMsg("We couldn't add this location. Check the name and try again.");
+        return;
+      }
       setName("");
       setAddress("");
       setModalOpen(false);
+    } catch {
+      setErrorMsg("Something went wrong while adding the location. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleCopyLink = (locSlug: string, id: string) => {
+  const handleCopyLink = async (locSlug: string, id: string) => {
     const url = `${window.location.origin}/f/${business?.slug}?loc=${locSlug}`;
-    navigator.clipboard.writeText(url);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedId(id);
+      window.setTimeout(() => setCopiedId(null), 2000);
+      setErrorMsg(null);
+    } catch {
+      setErrorMsg("Clipboard access was blocked. Copy the feedback link from your browser address bar instead.");
+    }
   };
 
   return (
@@ -51,7 +67,12 @@ export default function LocationsPage() {
         }
       />
 
-      <div className="max-w-6xl mx-auto px-6 py-6 space-y-6">
+      <div className="max-w-6xl mx-auto px-4 py-6 sm:px-6 space-y-6">
+        {errorMsg && (
+          <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+            {errorMsg}
+          </div>
+        )}
         {locations.length === 0 ? (
           <div className="p-12 text-center border border-dashed border-slate-300 rounded-lg bg-white">
             <MapPin className="w-8 h-8 text-slate-300 mx-auto mb-3" />
@@ -96,6 +117,7 @@ export default function LocationsPage() {
                         onClick={() => deleteLocation(loc.id)}
                         className="p-1 text-slate-300 hover:text-red-600 transition"
                         title="Delete location"
+                        aria-label={`Delete ${loc.name}`}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
