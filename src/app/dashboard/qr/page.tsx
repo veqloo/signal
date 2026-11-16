@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import QRCode from "qrcode";
 import { useWorkspace } from "@/lib/workspace-context";
+import { CONFIG } from "@/lib/config";
 import { Header } from "@/components/dashboard/Header";
 import { Download, Printer, Copy, Check, QrCode as QrIcon, Sparkles } from "lucide-react";
 
@@ -18,7 +19,7 @@ export default function QRStudioPage() {
   // Compute public feedback link
   const getPublicUrl = () => {
     if (typeof window === "undefined" || !business) return "";
-    let url = `${window.location.origin}/f/${business.slug}`;
+    let url = `${CONFIG.appUrl}/f/${business.slug}`;
     if (selectedLocation !== "all") {
       const loc = locations.find((l) => l.id === selectedLocation);
       if (loc) url += `?loc=${loc.slug}`;
@@ -74,7 +75,7 @@ export default function QRStudioPage() {
 
   if (isLoading) return <div className="mx-auto w-full max-w-5xl space-y-4 px-4 py-10"><div className="h-8 w-48 animate-pulse rounded bg-zinc-200"/><div className="h-72 animate-pulse rounded-2xl border border-zinc-200 bg-white"/></div>;
   if (workspaceError) return <div className="mx-auto max-w-xl px-4 py-16 text-center"><QrIcon className="mx-auto h-9 w-9 text-zinc-300"/><h2 className="mt-4 text-lg font-semibold text-zinc-950">QR Studio is waiting for your workspace</h2><p className="mt-2 text-sm text-zinc-500">Fix the workspace connection before generating a customer QR code.</p></div>;
-  if (!business) return <div className="mx-auto max-w-xl px-4 py-16 text-center"><QrIcon className="mx-auto h-9 w-9 text-zinc-300"/><h2 className="mt-4 text-lg font-semibold text-zinc-950">Set up your business first</h2><p className="mt-2 text-sm text-zinc-500">Your QR code will be generated from your real business and first location.</p><a href="/dashboard/settings" className="mt-5 inline-flex rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-semibold text-white">Set up business</a></div>;
+  if (!business) return <div className="mx-auto max-w-xl px-4 py-16 text-center"><QrIcon className="mx-auto h-9 w-9 text-zinc-300"/><h2 className="mt-4 text-lg font-semibold text-zinc-950">Set up your business first</h2><p className="mt-2 text-sm text-zinc-500">Your QR code will be generated from your real business and first location.</p><a href="/onboarding" className="mt-5 inline-flex rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-semibold text-white">Set up business</a></div>;
 
   return (
     <div className="flex-1 pb-16">

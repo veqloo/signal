@@ -18,7 +18,7 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (!isLoading && !workspaceError && (!business || business.onboarding_completed === false) && pathname !== "/dashboard/settings") {
-      router.replace("/dashboard/settings");
+      router.replace("/onboarding");
     }
   }, [business, isLoading, workspaceError, pathname, router]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);

@@ -28,6 +28,14 @@ interface WorkspaceContextType {
   unreadNotificationsCount: number;
   setDateRange: (range: DateRange) => void;
   setLocationFilter: (locId: string) => void;
+  createBusiness: (input: {
+    name: string;
+    category: string;
+    welcome_message: string | null;
+    google_review_url: string | null;
+    location_name: string;
+    location_address: string;
+  }) => Promise<Business>;
   updateBusiness: (updates: Partial<Business>) => Promise<boolean>;
   addLocation: (name: string, address: string) => Promise<BusinessLocation | null>;
   deleteLocation: (id: string) => Promise<boolean>;
@@ -154,6 +162,86 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     loadWorkspace();
   }, [loadWorkspace]);
+
+  const createBusiness = async (input: {
+    name: string;
+    category: string;
+    welcome_message: string | null;
+    google_review_url: string | null;
+    location_name: string;
+    location_address: string;
+  }): Promise<Business> => {
+    if (!clerkUser) throw new Error("Your Clerk account is not ready. Please sign in again.");
+
+    const clerkToken = await clerkSession?.getToken();
+    if (!clerkToken) throw new Error("Your session has expired. Please sign in again.");
+
+    const supabase = getSupabaseClient(clerkToken);
+    const baseSlug = slugify(input.name) || "business";
+    const uniqueSuffix = crypto.randomUUID().slice(0, 6);
+    const businessSlug = `${baseSlug}-${uniqueSuffix}`;
+
+    const { data: createdBusiness, error: businessError } = await supabase
+      .from("businesses")
+      .insert({
+        owner_id: clerkUser.id,
+        name: input.name.trim(),
+        slug: businessSlug,
+        category: input.category,
+        welcome_message: input.welcome_message,
+        google_review_url: input.google_review_url,
+        onboarding_completed: false,
+      })
+      .select("*")
+      .single();
+
+    if (businessError) throw new Error(`Could not create your business: ${businessError.message}`);
+
+    // Keep the business visible if location creation needs to be retried.
+    setBusiness(createdBusiness);
+
+    const locationName = input.location_name.trim() || "Main Location";
+    const locationSlug = `${slugify(locationName) || "main-location"}-${uniqueSuffix}`;
+    const { data: createdLocation, error: locationError } = await supabase
+      .from("locations")
+      .insert({
+        business_id: createdBusiness.id,
+        name: locationName,
+        slug: locationSlug,
+        address: input.location_address.trim() || null,
+        is_active: true,
+      })
+      .select("*")
+      .single();
+
+    if (locationError) {
+      throw new Error(`Your business was created, but its first location could not be saved: ${locationError.message}`);
+    }
+
+    // Memberships enable future team features; business ownership remains authoritative.
+    const { error: membershipError } = await supabase
+      .from("business_memberships")
+      .insert({ business_id: createdBusiness.id, user_id: clerkUser.id, role: "owner" });
+    if (membershipError) console.warn("Business owner membership could not be created:", membershipError);
+
+    const { error: completionError } = await supabase
+      .from("businesses")
+      .update({ onboarding_completed: true })
+      .eq("id", createdBusiness.id)
+      .eq("owner_id", clerkUser.id);
+
+    if (completionError) {
+      throw new Error(`Your business was saved, but setup could not be completed: ${completionError.message}`);
+    }
+
+    const completedBusiness = { ...createdBusiness, onboarding_completed: true };
+    setBusiness(completedBusiness);
+    setLocations([createdLocation]);
+    setFeedback([]);
+    setNotifications([]);
+    setWorkspaceError(null);
+    return completedBusiness;
+  };
 
   const updateBusiness = async (updates: Partial<Business>): Promise<boolean> => {
     if (!business) return false;
@@ -327,6 +415,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         unreadNotificationsCount,
         setDateRange,
         setLocationFilter,
+        createBusiness,
         updateBusiness,
         addLocation,
         deleteLocation,
